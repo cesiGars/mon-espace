@@ -208,6 +208,22 @@
   .stat.s-disc .ic2{background:#e8efff}
   .stat.s-clar .ic2{background:#ede9fe}
   .stat.s-vis .ic2{background:#e6f7ef}
+
+  /* hero score + coach */
+  .hero{background:var(--grad);color:#fff;border:none;border-radius:22px;padding:18px;margin-bottom:12px;box-shadow:0 14px 34px rgba(37,99,235,.32);animation:rise .4s ease both}
+  .hero-top{display:flex;align-items:center;gap:16px}
+  .score-ring{width:94px;height:94px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(#fff var(--p,0%), rgba(255,255,255,.22) 0);transition:background .9s cubic-bezier(.22,1,.36,1)}
+  .score-ring .inner{width:78px;height:78px;border-radius:50%;background:#3257d8;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .score-ring .n{font-size:30px;font-weight:800;line-height:1}
+  .score-ring .of{font-size:10px;opacity:.85;margin-top:1px}
+  .hero .label{font-size:12px;text-transform:uppercase;letter-spacing:.07em;opacity:.85;font-weight:700}
+  .hero .grade{font-size:22px;font-weight:800;letter-spacing:-.01em;margin-top:1px}
+  .hero .roast{margin-top:14px;background:rgba(255,255,255,.16);border-radius:14px;padding:12px 14px;font-size:14px;font-weight:600;line-height:1.42}
+  .hero .roast b{font-weight:800}
+
+  /* notifs */
+  .notif-time{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .notif-time input[type=time]{max-width:130px}
 </style>
 </head>
 <body>
@@ -224,6 +240,7 @@
 
   <!-- ACCUEIL -->
   <section class="view active" id="view-home">
+    <div class="hero" id="homeScore"></div>
     <h2 class="section-title">Ton élan</h2>
     <div class="dash-card" id="homeMomentum"></div>
     <h2 class="section-title">Tes stats de vie</h2>
@@ -332,6 +349,34 @@
         <div class="auth-status connected"><span class="dot"></span><span>Connecté — <span id="authWho">—</span></span></div>
         <div class="dim" id="syncInfo" style="margin-bottom:10px">Synchro active ✓</div>
         <button class="btn subtle sm" onclick="cloudLogout()">Se déconnecter</button>
+      </div>
+    </div>
+
+    <h2 class="section-title">Coach &amp; rappels</h2>
+    <div class="card">
+      <strong>Mode spam 😈</strong>
+      <p class="dim" style="margin-top:4px">Te harcèle à intervalle régulier tant qu'il reste des <b>habitudes non cochées</b> ou des <b>objectifs non résolus</b>. Dès que tout est fait, silence radio. Marche quand l'appli est ouverte ou en arrière-plan (installe-la sur l'écran d'accueil pour mieux). Sur iPhone fermé, c'est bloqué par Apple.</p>
+      <div id="notifOff">
+        <button class="btn full" onclick="enableNotif()">Activer le spam</button>
+      </div>
+      <div id="notifOn" style="display:none">
+        <div class="auth-status connected"><span class="dot"></span><span>Spam activé 😈</span></div>
+        <label class="fld" style="margin-top:10px">Fréquence du harcèlement</label>
+        <select id="notifFreq" onchange="setNotifFreq()">
+          <option value="5">Toutes les 5 min (sauvage)</option>
+          <option value="15">Toutes les 15 min</option>
+          <option value="30" selected>Toutes les 30 min</option>
+          <option value="60">Toutes les heures</option>
+        </select>
+        <label class="fld" style="margin-top:10px">Heures actives (pas de spam la nuit)</label>
+        <div class="row">
+          <input type="time" id="notifStart" value="08:00" onchange="setNotifWindow()">
+          <input type="time" id="notifEnd" value="22:00" onchange="setNotifWindow()">
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn ghost sm" onclick="testNotif()">Tester maintenant</button>
+          <button class="btn subtle sm" onclick="disableNotif()">Désactiver</button>
+        </div>
       </div>
     </div>
 
@@ -531,7 +576,9 @@ function addGoal(){
   i.value="";n.value="";save();renderGoals();renderHome();toast("Ajouté à ta liste");
 }
 function toggleGoal(id){
-  const g=DB.goals.find(x=>x.id===id);if(!g)return;g.done=!g.done;save();renderGoals();renderHome();
+  const g=DB.goals.find(x=>x.id===id);if(!g)return;g.done=!g.done;
+  if(g.done)g.doneDate=todayKey();else delete g.doneDate;
+  save();renderGoals();renderHome();
 }
 function delGoal(id){
   DB.goals=DB.goals.filter(x=>x.id!==id);save();renderGoals();renderHome();
@@ -690,7 +737,77 @@ function momentumLabel(m){
   if(m>=10)return {t:"Réveil",e:"🌱",hot:false};
   return {t:"Endormi",e:"😴",hot:false};
 }
+/* ---- Score d'Homme Productif (du jour) ---- */
+function dayScore(){
+  const tk=todayKey();let s=0;
+  if(DB.habits.length)s+=Math.round(DB.habits.filter(h=>h.done[tk]).length/DB.habits.length*40);
+  if(DB.sessions.some(x=>x.date===tk))s+=25;
+  if(DB.entries.some(x=>x.date===tk))s+=20;
+  if(DB.goals.some(g=>g.created===tk||g.doneDate===tk))s+=15;
+  return Math.min(100,s);
+}
+function gradeOf(s){
+  if(s>=100)return {t:"LÉGENDE",e:"🏆"};
+  if(s>=76)return {t:"Machine",e:"🔱"};
+  if(s>=56)return {t:"Solide",e:"💪"};
+  if(s>=31)return {t:"Tiède",e:"😶‍🌫️"};
+  if(s>=1)return {t:"Mou du genou",e:"🥱"};
+  return {t:"Fantôme",e:"👻"};
+}
+function daysIdle(){
+  const set=activeDays();const d=new Date();let i=0;
+  while(i<90){if(set.has(todayKey(d)))return i;d.setDate(d.getDate()-1);i++;}
+  return i;
+}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function roastLine(s,idle){
+  if(idle>=3)return pick([
+    `<b>${idle} jours</b> sans rien. Même ton canapé commence à s'inquiéter.`,
+    `Toujours vivant ? On dirait pas, vu ton activité. 💀`,
+    `${idle} jours dans le vide. T'as pris un abonnement à la flemme ?`,
+    `Le néant a appelé : il veut récupérer son trône.`]);
+  if(s===0)return pick([
+    `<b>0 pointé.</b> Magnifique. On se réveille ?`,
+    `Tu t'es levé… pour ça ?`,
+    `Ton score est aussi vide que tes bonnes résolutions.`,
+    `Zéro. Le canapé mène 1-0.`]);
+  if(s<=30)return pick([
+    `Le minimum syndical, version stagiaire.`,
+    `Tu chauffes… très très lentement.`,
+    `C'est un début. Minuscule, mais un début.`]);
+  if(s<=55)return pick([
+    `Tiède. Comme ta motivation.`,
+    `On sait tous les deux que tu peux mieux.`,
+    `À mi-chemin entre la gloire et la sieste.`]);
+  if(s<=75)return pick([
+    `Là tu commences à ressembler à quelque chose.`,
+    `Solide. Continue avant que la flemme revienne.`,
+    `Pas mal du tout, l'artiste.`]);
+  if(s<100)return pick([
+    `Ok là je suis presque fier. <b>Presque.</b>`,
+    `Machine. Garde ce rythme et je me tais.`,
+    `Tu fais peur. Dans le bon sens.`]);
+  return pick([
+    `Sans faute. Aujourd'hui t'es une <b>légende</b>. 🏆`,
+    `100/100. Encadre cette journée.`,
+    `Parfait. T'as le droit de frimer.`]);
+}
+function renderScoreHero(){
+  const s=dayScore();const g=gradeOf(s);const idle=daysIdle();
+  document.getElementById("homeScore").innerHTML=`
+    <div class="hero-top">
+      <div class="score-ring" id="scoreRing"><div class="inner"><div class="n">${s}</div><div class="of">/ 100</div></div></div>
+      <div>
+        <div class="label">Note d'Homme Productif</div>
+        <div class="grade">${g.e} ${g.t}</div>
+      </div>
+    </div>
+    <div class="roast">${roastLine(s,idle)}</div>`;
+  setTimeout(()=>{const r=document.getElementById("scoreRing");if(r)r.style.setProperty("--p",s+"%");},60);
+}
+
 function renderGameHome(){
+  renderScoreHero();
   // momentum
   const m=momentum();const ml=momentumLabel(m);
   document.getElementById("homeMomentum").innerHTML=`
@@ -865,6 +982,97 @@ function renderCloudUI(){
   if(inU&&firebase.auth().currentUser){document.getElementById("authWho").textContent=firebase.auth().currentUser.email;}
 }
 
+/* ============================================================
+   NOTIFICATIONS — MODE SPAM (habitudes + objectifs non faits)
+   ============================================================ */
+const N_EN="me-notif",N_FREQ="me-notif-freq",N_START="me-notif-start",N_END="me-notif-end",N_LAST="me-notif-last";
+function notifSupported(){return typeof Notification!=="undefined";}
+function notifEnabled(){return localStorage.getItem(N_EN)==="1"&&notifSupported()&&Notification.permission==="granted";}
+function nFreq(){return parseInt(localStorage.getItem(N_FREQ)||"30",10);}
+function nStart(){return localStorage.getItem(N_START)||"08:00";}
+function nEnd(){return localStorage.getItem(N_END)||"22:00";}
+
+// ce qu'il reste à faire : habitudes non cochées aujourd'hui + objectifs ouverts
+function pendingItems(){
+  const tk=todayKey();const out=[];
+  DB.habits.forEach(h=>{if(!h.done[tk])out.push({type:"habitude",name:h.name});});
+  DB.goals.forEach(g=>{if(!g.done)out.push({type:"objectif",name:g.text});});
+  return out;
+}
+function spamLine(it){
+  if(it.type==="habitude")return pick([
+    `« ${it.name} » : toujours pas coché. On attend quoi ?`,
+    `Ton habitude « ${it.name} » te regarde de travers. 👀`,
+    `« ${it.name} » se fait pas tout seul, hein.`,
+    `Spoiler : « ${it.name} » est encore vide.`,
+    `Allez, « ${it.name} ». Bouge.`]);
+  return pick([
+    `Objectif « ${it.name} » : zéro avancée. Bravo. 👏`,
+    `« ${it.name} » t'attend depuis un moment…`,
+    `Ton objectif « ${it.name} » prend la poussière.`,
+    `Tu te souviens de « ${it.name} » ? Lui oui.`]);
+}
+function enableNotif(){
+  if(!notifSupported()){toast("Notifications non supportées ici");return;}
+  Notification.requestPermission().then(p=>{
+    if(p==="granted"){
+      localStorage.setItem(N_EN,"1");
+      if(!localStorage.getItem(N_FREQ))localStorage.setItem(N_FREQ,"30");
+      if(!localStorage.getItem(N_START))localStorage.setItem(N_START,"08:00");
+      if(!localStorage.getItem(N_END))localStorage.setItem(N_END,"22:00");
+      renderNotifUI();fireNotif(true);toast("Spam activé 😈");
+    }else toast("Permission refusée par le navigateur");
+  });
+}
+function disableNotif(){localStorage.removeItem(N_EN);renderNotifUI();toast("Spam désactivé");}
+function setNotifFreq(){localStorage.setItem(N_FREQ,document.getElementById("notifFreq").value);toast("Fréquence mise à jour");}
+function setNotifWindow(){
+  localStorage.setItem(N_START,document.getElementById("notifStart").value||"08:00");
+  localStorage.setItem(N_END,document.getElementById("notifEnd").value||"22:00");
+  toast("Heures actives mises à jour");
+}
+function testNotif(){
+  if(!notifEnabled()){toast("Active d'abord le spam");return;}
+  fireNotif(true);
+}
+function fireNotif(force){
+  if(!notifEnabled())return;
+  const items=pendingItems();
+  if(!items.length){if(force)try{new Notification("Mon Espace 🏆",{body:"Rien à te reprocher. Tout est fait. Profite. 😎"});}catch(e){}return;}
+  const it=pick(items);
+  const extra=items.length>1?` (+${items.length-1} autre${items.length>2?"s":""})`:"";
+  try{new Notification("Mon Espace 😈",{body:spamLine(it)+extra});}catch(e){}
+}
+function inWindow(){
+  const now=new Date();const cur=now.getHours()*60+now.getMinutes();
+  const[sh,sm]=nStart().split(":").map(Number);const[eh,em]=nEnd().split(":").map(Number);
+  const a=sh*60+sm,b=eh*60+em;
+  return a<=b?(cur>=a&&cur<b):(cur>=a||cur<b);
+}
+function renderNotifUI(){
+  const on=notifEnabled();
+  const off=document.getElementById("notifOff"),onEl=document.getElementById("notifOn");
+  if(off)off.style.display=on?"none":"block";
+  if(onEl)onEl.style.display=on?"block":"none";
+  const f=document.getElementById("notifFreq");if(f)f.value=String(nFreq());
+  const s=document.getElementById("notifStart");if(s)s.value=nStart();
+  const e=document.getElementById("notifEnd");if(e)e.value=nEnd();
+}
+let notifTimer=null;
+function startNotifScheduler(){
+  if(notifTimer)clearInterval(notifTimer);
+  notifTimer=setInterval(()=>{
+    if(!notifEnabled())return;
+    if(!inWindow())return;
+    if(!pendingItems().length)return;
+    const last=parseInt(localStorage.getItem(N_LAST)||"0",10);
+    if(Date.now()-last>=nFreq()*60000){
+      localStorage.setItem(N_LAST,String(Date.now()));
+      fireNotif(false);
+    }
+  },20000);
+}
+
 /* ---------- init ---------- */
 document.getElementById("wDate").value=todayKey();
 addExRow();
@@ -872,6 +1080,8 @@ renderAll();
 setCloudDot("off",getCfg()?"Non connecté":"Hors-ligne");
 renderCloudUI();
 initCloud();
+renderNotifUI();
+startNotifScheduler();
 </script>
 </body>
 </html>
