@@ -1060,7 +1060,7 @@ function setHealth(field,val,isFloat){
 }
 
 /* ---- Import par capture d'écran (Gemini Vision) ---- */
-const GEMINI_MODEL="gemini-2.0-flash";
+const GEMINI_MODEL="gemini-2.5-flash";
 function geminiKey(){return localStorage.getItem("me-gemini-key")||"";}
 function saveGeminiKey(){
   const el=document.getElementById("geminiKey");const v=(el?el.value:"").trim();
@@ -1092,7 +1092,13 @@ function resizeImg(file,maxW){
 }
 function importHealthShot(file){
   toast("Lecture de la capture… 🤖");
-  resizeImg(file,1100).then(callGemini).then(applyHealthFromAI).catch(e=>{console.error(e);toast("Échec de la lecture 😕");});
+  resizeImg(file,1100).then(callGemini).then(applyHealthFromAI).catch(e=>{
+    console.error(e);
+    let m=(e&&e.message)?e.message:"erreur inconnue";
+    if(/not found|not supported|404/i.test(m))m="Modèle IA indisponible (à mettre à jour)";
+    else if(/API key|API_KEY|PERMISSION|403|referer|referrer/i.test(m))m="Clé refusée (vérifie la clé / les restrictions)";
+    toast("Échec : "+m.slice(0,80));
+  });
 }
 function callGemini(b64){
   const prompt="Tu lis une capture d'écran d'iPhone (Temps d'écran, app Santé, montre, etc.). Extrais uniquement les valeurs présentes et réponds STRICTEMENT en JSON avec ces clés (omets celles absentes) : "+
