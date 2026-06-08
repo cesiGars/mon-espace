@@ -132,6 +132,9 @@
   .htag{font-size:10px;font-weight:700;color:var(--muted);background:#f1f4fb;border-radius:8px;padding:1px 6px;vertical-align:middle}
   .htag.stat{background:var(--accent-soft);font-size:12px;padding:1px 5px}
   .weekdots-w{font-size:12px;color:var(--muted);font-weight:600}
+  .check.bad{border-color:#f0b6b0}
+  .check.bad.done{background:#e2483d;border-color:#e2483d;box-shadow:0 3px 10px rgba(226,72,61,.3)}
+  .htag.bad{background:#fcebe9;color:#c0392b}
 
   /* workouts */
   .exline{display:flex;gap:8px;margin-bottom:8px;align-items:center}
@@ -260,6 +263,13 @@
   .hcell .hinput{margin-top:5px;width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:18px;font-weight:800;background:#fff;text-align:left}
   .health-hint{color:var(--muted);font-size:13px;line-height:1.5}
   .health-date{font-size:12px;color:var(--muted);margin-top:10px}
+
+  /* avatar évolutif */
+  .avatar-img{width:100%;border-radius:16px;display:block;max-height:440px;object-fit:cover;object-position:top;background:#eef1f8}
+  .avatar-name{font-weight:800;font-size:19px;margin-top:11px;letter-spacing:-.01em}
+  .avatar-sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .avatar-bar{height:10px;border-radius:8px;background:#eef1f8;overflow:hidden;margin-top:8px}
+  .avatar-bar>div{height:100%;background:var(--grad);border-radius:8px;transition:width .8s cubic-bezier(.22,1,.36,1)}
 </style>
 </head>
 <body>
@@ -286,6 +296,8 @@
   <!-- ACCUEIL -->
   <section class="view active" id="view-home">
     <div class="hero" id="homeScore"></div>
+    <h2 class="section-title">Ton avatar</h2>
+    <div class="dash-card" id="homeAvatar"></div>
     <h2 class="section-title">Ton élan</h2>
     <div class="dash-card" id="homeMomentum"></div>
     <h2 class="section-title">Tes stats de vie</h2>
@@ -315,13 +327,16 @@
           <option value="daily">📅 Quotidienne</option>
           <option value="weekly">🗓️ Hebdomadaire</option>
         </select>
-        <select id="newHabitStat" title="Quelle stat de vie ça nourrit">
+        <select id="newHabitStat" title="Quelle stat de vie ça nourrit / abîme">
           <option value="disc">🎯 Discipline</option>
           <option value="force">💪 Force</option>
           <option value="clar">🧠 Clarté</option>
           <option value="vis">🧭 Vision</option>
         </select>
       </div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;font-weight:600;cursor:pointer">
+        <input type="checkbox" id="newHabitBad" style="width:auto"> 😈 Mauvaise habitude (à éviter — la cocher = malus)
+      </label>
     </div>
   </section>
 
@@ -581,10 +596,12 @@ function addHabit(){
   const name=i.value.trim();if(!name)return;
   const freq=document.getElementById("newHabitFreq").value;
   const stat=document.getElementById("newHabitStat").value;
-  DB.habits.push({id:uid(),name,note:n.value.trim(),emoji:newHabitEmoji,freq,stat,created:todayKey(),done:{}});
+  const bad=document.getElementById("newHabitBad").checked;
+  DB.habits.push({id:uid(),name,note:n.value.trim(),emoji:newHabitEmoji,freq,stat,bad,created:todayKey(),done:{}});
   i.value="";n.value="";newHabitEmoji="";
+  document.getElementById("newHabitBad").checked=false;
   const b=document.getElementById("newEmojiBtn");if(b){b.textContent="＋";b.classList.add("empty");}
-  save();renderHabits();renderHome();toast(freq==="weekly"?"Habitude hebdo ajoutée":"Habitude ajoutée");
+  save();renderHabits();renderHome();toast(bad?"Mauvaise habitude ajoutée 😈":(freq==="weekly"?"Habitude hebdo ajoutée":"Habitude ajoutée"));
 }
 
 /* ---- sélecteur d'emoji ---- */
@@ -618,6 +635,14 @@ function pickEmoji(e){
 function adherence(h){
   const keys=Object.keys(h.done||{});
   const created=h.created||(keys.length?keys.sort()[0]:todayKey());
+  // mauvaise habitude : on mesure l'ÉVITEMENT (fraction de jours sans la faire) sur 30j
+  if(h.bad){
+    const start=new Date(created+"T00:00:00");const today=new Date(todayKey()+"T00:00:00");
+    let win=Math.floor((today-start)/86400000)+1;if(win<1)win=1;if(win>30)win=30;
+    let slip=0;const d=new Date(today);
+    for(let i=0;i<win;i++){if(h.done[todayKey(d)])slip++;d.setDate(d.getDate()-1);}
+    return 1-(slip/win);
+  }
   if(h.freq==="weekly"){
     const dw=new Set(keys.map(weekKeyOf));
     const startW=weekStart(new Date(created+"T00:00:00"));
@@ -668,6 +693,12 @@ function weekStreak(h){
   return s;
 }
 function streakUnit(h){return h.freq==="weekly"?"sem":"j";}
+// pour les mauvaises habitudes : jours d'affilée SANS la faire
+function cleanStreak(h){
+  let s=0;const d=new Date();
+  while(!h.done[todayKey(d)]){s++;d.setDate(d.getDate()-1);if(s>3650)break;}
+  return s;
+}
 function last7(h){
   const out=[];const d=new Date();d.setDate(d.getDate()-6);
   for(let i=0;i<7;i++){out.push(!!h.done[todayKey(d)]);d.setDate(d.getDate()+1);}
@@ -677,10 +708,24 @@ function renderHabits(){
   const el=document.getElementById("habitList");
   if(!DB.habits.length){el.innerHTML='<div class="empty">Aucune habitude pour l\'instant.<br>Ajoute ta première en dessous 👇</div>';return;}
   el.innerHTML=DB.habits.map(h=>{
-    const done=habitDone(h);const st=streakOf(h);const unit=streakUnit(h);
+    const done=habitDone(h);
     const r=adherence(h);const pc=Math.round(r*100);
     const emo=h.emoji?`<button class="hemoji" onclick="openEmoji('${h.id}')">${h.emoji}</button>`:`<button class="hemoji empty" onclick="openEmoji('${h.id}')">＋</button>`;
     const sicon=STATICON[h.stat||"disc"];
+    if(h.bad){
+      const cs=cleanStreak(h);
+      return `<div class="habit">
+        <div class="check bad ${done?'done':''}" onclick="toggleHabit('${h.id}')" title="Coche si tu as craqué">${done?'✕':''}</div>
+        <div class="name">
+          <span class="hname">${emo}${esc(h.name)} <span class="htag stat" title="Abîme cette stat">${sicon}</span><span class="htag bad">à éviter</span></span>
+          ${h.note?`<small>${esc(h.note)}</small>`:''}
+          <div class="hsub"><span class="streak ${cs?'':'zero'}">${cs?'🛡️ '+cs+' j sans':'craqué aujourd\'hui'}</span></div>
+        </div>
+        <div class="adh" style="background:${adhColor(r)}" title="% de jours évités (30j)">${pc}%</div>
+        <button class="iconbtn" onclick="delHabit('${h.id}')">✕</button>
+      </div>`;
+    }
+    const st=streakOf(h);const unit=streakUnit(h);
     const freqTag=h.freq==="weekly"?'<span class="htag">hebdo</span>':'';
     const subRight=h.freq==="weekly"
       ?`<span class="weekdots-w">${weeklyCount(h)}× cette semaine</span>`
@@ -871,11 +916,18 @@ function renderHome(){
   if(!DB.habits.length){
     hh.innerHTML='<div class="empty">Commence par créer quelques habitudes 👉<br><button class="btn ghost sm" style="margin-top:10px" onclick="go(\'habits\')">Mes habitudes</button></div>';
   }else{
-    const doneN=DB.habits.filter(habitDone).length;
-    const pct=Math.round(doneN/DB.habits.length*100);
+    const goodH=DB.habits.filter(h=>!h.bad);
+    const doneN=goodH.filter(habitDone).length;
+    const pct=goodH.length?Math.round(doneN/goodH.length*100):0;
+    const ring=goodH.length?`<div class="ring" style="background:conic-gradient(var(--accent) ${pct}%, #eef1f8 0)"><span>${doneN}/${goodH.length}</span></div>`:'';
     hh.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <strong>Habitudes du jour</strong><div class="ring" style="background:conic-gradient(var(--accent) ${pct}%, #eef1f8 0)"><span>${doneN}/${DB.habits.length}</span></div></div>`+
-      DB.habits.map(h=>{const done=habitDone(h);const wk=h.freq==="weekly"?'<span class="htag">hebdo</span>':'';return `<div class="habit">
+        <strong>Habitudes du jour</strong>${ring}</div>`+
+      DB.habits.map(h=>{const done=habitDone(h);
+        if(h.bad){const cs=cleanStreak(h);return `<div class="habit">
+          <div class="check bad ${done?'done':''}" onclick="toggleHabit('${h.id}')">${done?'✕':''}</div>
+          <div class="name">${h.emoji?h.emoji+' ':''}${esc(h.name)} <span class="htag bad">à éviter</span></div>
+          <div class="streak ${cs?'':'zero'}">${cs?'🛡️ '+cs+' j':'craqué'}</div></div>`;}
+        const wk=h.freq==="weekly"?'<span class="htag">hebdo</span>':'';return `<div class="habit">
         <div class="check ${done?'done':''}" onclick="toggleHabit('${h.id}')">${done?'✓':''}</div>
         <div class="name">${h.emoji?h.emoji+' ':''}${esc(h.name)} ${wk}</div>
         <span class="adh-dot" style="background:${adhColor(adherence(h))}" title="Régularité ${Math.round(adherence(h)*100)}%"></span>
@@ -934,8 +986,8 @@ function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 // XP cumulés par stat à partir des données
 function statsXP(){
   const acc={force:0,disc:0,clar:0,vis:0};
-  // chaque coche d'habitude nourrit la stat choisie (Discipline par défaut)
-  DB.habits.forEach(h=>{const s=acc[h.stat]!==undefined?h.stat:"disc";acc[s]+=Object.keys(h.done||{}).length*2;});
+  // chaque coche d'habitude nourrit (ou abîme, si mauvaise) la stat choisie
+  DB.habits.forEach(h=>{const s=acc[h.stat]!==undefined?h.stat:"disc";const pts=Object.keys(h.done||{}).length*2;acc[s]+=h.bad?-pts:pts;});
   // Force : +6 par séance + 1 par exercice
   DB.sessions.forEach(s=>{acc.force+=6+(s.ex?s.ex.length:0);});
   // Clarté : +4 par entrée de journal
@@ -956,17 +1008,18 @@ function healthStatXP(){
     const wc=Number(day.workoutCount);if(!isNaN(wc))a.force+=wc*6;             // +6 / séance
     const cal=Number(day.activeCalories);if(!isNaN(cal))a.force+=cal/100;      // +1 / 100 cal
     const hr=Number(day.restingHR);if(!isNaN(hr)&&hr>0&&hr<60)a.force+=2;      // bonne FC repos
-    const sl=Number(day.sleepHours);if(!isNaN(sl))a.clar+=sl>=7?5:(sl>=6?3:1); // sommeil -> clarté
-    const sm=Number(day.screenMinutes);if(!isNaN(sm))a.disc+=sm<=90?5:(sm<=120?3:(sm<=180?1:0)); // peu d'écran -> discipline
+    const sl=Number(day.sleepHours);if(!isNaN(sl))a.clar+= sl>=9?5:sl>=8?4:sl>=7?3:sl>=6?1:sl>=5?-1:-3; // sommeil -> clarté (malus si court)
+    const sm=Number(day.screenMinutes);if(!isNaN(sm))a.disc+= sm<=90?5:sm<=120?3:sm<=180?1:sm<=300?-2:-4; // écran -> discipline (malus si élevé)
   });
   a.force=Math.round(a.force);a.disc=Math.round(a.disc);a.clar=Math.round(a.clar);
   return a;
 }
 // niveau à partir des XP (courbe douce et gratifiante)
 function levelFromXP(xp){
+  xp=Math.max(0,xp);
   let lvl=1,need=30,acc=0;
   while(xp>=acc+need){acc+=need;lvl++;need=Math.round(need*1.35);}
-  return {lvl,into:xp-acc,need,pct:Math.round((xp-acc)/need*100)};
+  return {lvl,into:xp-acc,need,pct:Math.max(0,Math.min(100,Math.round((xp-acc)/need*100)))};
 }
 // un jour est "actif" s'il y a au moins une action ce jour-là
 function activeDays(){
@@ -996,11 +1049,14 @@ function momentumLabel(m){
 /* ---- Score d'Homme Productif (du jour) ---- */
 function dayScore(){
   const tk=todayKey();let s=0;
-  if(DB.habits.length)s+=Math.round(DB.habits.filter(habitDone).length/DB.habits.length*40);
+  const goodH=DB.habits.filter(h=>!h.bad),badH=DB.habits.filter(h=>h.bad);
+  if(goodH.length)s+=Math.round(goodH.filter(habitDone).length/goodH.length*40);
+  // malus : chaque mauvaise habitude faite aujourd'hui = -10
+  s-=badH.filter(habitDone).length*10;
   if(DB.sessions.some(x=>x.date===tk))s+=25;
   if(DB.entries.some(x=>x.date===tk))s+=20;
   if(DB.goals.some(g=>g.created===tk||g.doneDate===tk))s+=15;
-  return Math.min(100,s);
+  return Math.max(0,Math.min(100,s));
 }
 function gradeOf(s){
   if(s>=100)return {t:"LÉGENDE",e:"🏆"};
@@ -1062,8 +1118,42 @@ function renderScoreHero(){
   setTimeout(()=>{const r=document.getElementById("scoreRing");if(r)r.style.setProperty("--p",s+"%");},60);
 }
 
+/* ---- Avatar évolutif (6 paliers selon le niveau global) ---- */
+const AVATARS=[
+  {name:"Larve",min:0},
+  {name:"Cassé",min:60},
+  {name:"Motivé",min:140},
+  {name:"Déterminé",min:250},
+  {name:"En forme",min:400},
+  {name:"Costaud",min:650},
+  {name:"Surhumain",min:1000},
+  {name:"Cosmique",min:1500},
+  {name:"Omniscient",min:2200},
+  {name:"Divin · MED ∞",min:3200}
+];
+function totalPower(){const x=statsXP();return Math.max(0,x.force)+Math.max(0,x.disc)+Math.max(0,x.clar)+Math.max(0,x.vis);}
+function avatarTier(p){let i=0;for(let k=0;k<AVATARS.length;k++){if(p>=AVATARS[k].min)i=k;}return i;}
+function avatarImgFail(img,idx){
+  if(!img.dataset.alt){img.dataset.alt="1";img.src="avatar"+idx+".jpg";}
+  else{img.style.display="none";const f=document.getElementById("avatarFallback");if(f)f.style.display="block";}
+}
+function renderAvatar(){
+  const el=document.getElementById("homeAvatar");if(!el)return;
+  const p=Math.round(totalPower());const i=avatarTier(p);const t=AVATARS[i];const next=AVATARS[i+1];
+  let prog;
+  if(next){
+    const span=next.min-t.min,into=p-t.min;const pct=Math.max(0,Math.min(100,Math.round(into/span*100)));
+    prog=`<div class="avatar-sub">Niveau ${i+1}/${AVATARS.length} · ${p} pts · encore ${next.min-p} pts pour « ${next.name} »</div><div class="avatar-bar"><div style="width:${pct}%"></div></div>`;
+  }else{prog=`<div class="avatar-sub">Niveau MAX 👑 · ${p} pts — t'es au sommet.</div>`;}
+  el.innerHTML=`<img class="avatar-img" src="avatar${i+1}.png" alt="avatar niveau ${i+1}" onerror="avatarImgFail(this,${i+1})">
+    <div id="avatarFallback" style="display:none" class="health-hint">Ajoute tes images <b>avatar1.png … avatar${AVATARS.length}.png</b> dans ton dépôt GitHub (même dossier que index.html) pour voir ton perso évoluer.</div>
+    <div class="avatar-name">${t.name}${i===AVATARS.length-1?' 👑':''}</div>
+    ${prog}`;
+}
+
 function renderGameHome(){
   renderScoreHero();
+  renderAvatar();
   // momentum
   const m=momentum();const ml=momentumLabel(m);
   document.getElementById("homeMomentum").innerHTML=`
@@ -1367,8 +1457,8 @@ function nEnd(){return localStorage.getItem(N_END)||"22:00";}
 
 // ce qu'il reste à faire : habitudes non cochées aujourd'hui + objectifs ouverts
 function pendingItems(){
-  const tk=todayKey();const out=[];
-  DB.habits.forEach(h=>{if(!h.done[tk])out.push({type:"habitude",name:h.name});});
+  const out=[];
+  DB.habits.forEach(h=>{if(!h.bad&&!habitDone(h))out.push({type:"habitude",name:h.name});});
   DB.goals.forEach(g=>{if(!g.done)out.push({type:"objectif",name:g.text});});
   return out;
 }
