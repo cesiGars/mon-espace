@@ -7,33 +7,41 @@
 <title>Mon Espace</title>
 <style>
   :root{
-    --bg:#faf9f6;
+    --bg:#f4f7fc;
     --card:#ffffff;
-    --ink:#1f1d1a;
-    --muted:#9b968d;
-    --line:#ece9e2;
-    --accent:#3a7d5d;
-    --accent-soft:#e8f1ec;
-    --warn:#c77b4a;
-    --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);
-    --radius:18px;
+    --ink:#0f172a;
+    --muted:#94a3b8;
+    --line:#e9edf6;
+    --accent:#2563eb;
+    --accent-2:#6366f1;
+    --accent-soft:#e8efff;
+    --grad:linear-gradient(135deg,#3b82f6 0%,#6366f1 100%);
+    --grad-warm:linear-gradient(135deg,#f59e0b,#f97316);
+    --warn:#f59e0b;
+    --shadow:0 1px 2px rgba(15,23,42,.04),0 12px 30px rgba(37,99,235,.08);
+    --radius:20px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
   body{
-    background:var(--bg);
+    background:
+      radial-gradient(1100px 460px at 50% -260px, rgba(99,102,241,.16), transparent 70%),
+      var(--bg);
+    background-attachment:fixed;
     color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     line-height:1.5;
     -webkit-font-smoothing:antialiased;
-    padding-bottom:90px;
+    padding-bottom:94px;
   }
   .wrap{max-width:720px;margin:0 auto;padding:0 18px}
   header.top{
     padding:28px 0 14px;
   }
   header.top h1{
-    font-size:26px;margin:0;font-weight:700;letter-spacing:-.02em;
+    font-size:27px;margin:0;font-weight:800;letter-spacing:-.03em;
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;
+    display:inline-block;
   }
   header.top .date{color:var(--muted);font-size:14px;margin-top:2px}
   .greeting{color:var(--muted);font-size:15px;margin-top:4px}
@@ -55,11 +63,11 @@
     padding:6px 4px;border-radius:12px;color:var(--muted);font-size:11px;
     font-family:inherit;transition:color .15s;
   }
-  nav.tabs button .ic{font-size:20px;line-height:1}
+  nav.tabs button .ic{font-size:20px;line-height:1;transition:transform .18s cubic-bezier(.34,1.56,.64,1)}
   nav.tabs button.active{color:var(--accent)}
-  nav.tabs button.active .ic{transform:translateY(-1px)}
+  nav.tabs button.active .ic{transform:translateY(-2px) scale(1.12)}
 
-  section.view{display:none;animation:fade .25s ease}
+  section.view{display:none;animation:fade .3s ease}
   section.view.active{display:block}
   @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
@@ -72,11 +80,13 @@
 
   /* buttons */
   .btn{
-    border:none;border-radius:12px;padding:11px 16px;font-size:15px;font-weight:600;
-    font-family:inherit;cursor:pointer;background:var(--accent);color:#fff;transition:filter .15s,transform .05s;
+    border:none;border-radius:13px;padding:12px 16px;font-size:15px;font-weight:700;
+    font-family:inherit;cursor:pointer;background:var(--grad);color:#fff;
+    box-shadow:0 6px 16px rgba(37,99,235,.28);transition:filter .15s,transform .08s,box-shadow .15s;
   }
-  .btn:active{transform:scale(.97)}
-  .btn.ghost{background:var(--accent-soft);color:var(--accent)}
+  .btn:hover{filter:brightness(1.06)}
+  .btn:active{transform:scale(.96)}
+  .btn.ghost{background:var(--accent-soft);color:var(--accent);box-shadow:none}
   .btn.subtle{background:#f1efe9;color:var(--ink)}
   .btn.sm{padding:7px 12px;font-size:13px;border-radius:10px}
   .btn.full{width:100%}
@@ -104,7 +114,8 @@
     flex:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
     color:#fff;font-size:16px;transition:all .15s;background:#fff;
   }
-  .check.done{background:var(--accent);border-color:var(--accent)}
+  .check.done{background:var(--grad);border-color:transparent;box-shadow:0 3px 10px rgba(37,99,235,.32)}
+  .check:active{transform:scale(.88)}
   .habit .name{flex:1;font-weight:500}
   .habit .name small{display:block;color:var(--muted);font-weight:400;font-size:12px}
   .streak{font-size:13px;color:var(--warn);font-weight:600;white-space:nowrap}
@@ -147,7 +158,7 @@
 
   .dim{color:var(--muted);font-size:13px}
   .toolbar{display:flex;gap:8px;justify-content:flex-end;margin:18px 0 4px;flex-wrap:wrap}
-  .pill{display:inline-block;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px}
+  .pill{display:inline-block;background:var(--grad);color:#fff;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;box-shadow:0 4px 10px rgba(37,99,235,.25)}
   .toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:30px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99}
   .toast.show{opacity:1}
   hr.sep{border:none;border-top:1px solid var(--line);margin:14px 0}
@@ -159,6 +170,44 @@
   .auth-status{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:10px}
   .auth-status .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
   .auth-status.connected .dot{background:var(--accent)}
+
+  /* ====== GAMIFICATION ====== */
+  .dash-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px;animation:rise .4s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .dash-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .dash-head strong{font-size:15px}
+
+  /* anneau de progression */
+  .ring{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;position:relative;flex:none}
+  .ring::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--card)}
+  .ring span{position:relative;font-size:13px;font-weight:800;color:var(--ink)}
+
+  /* momentum */
+  .mom-top{display:flex;align-items:center;gap:14px}
+  .mom-flame{font-size:34px;line-height:1;filter:grayscale(.2);transition:transform .3s}
+  .mom-main{flex:1}
+  .mom-label{font-size:18px;font-weight:800;letter-spacing:-.01em}
+  .mom-sub{font-size:12.5px;color:var(--muted)}
+  .mom-bar{height:12px;border-radius:10px;background:#eef1f8;overflow:hidden;margin-top:10px;position:relative}
+  .mom-fill{height:100%;border-radius:10px;background:var(--grad);width:0;transition:width .8s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden}
+  .mom-fill.hot{background:var(--grad-warm)}
+  .mom-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transform:translateX(-100%);animation:sheen 2.4s ease-in-out infinite}
+  @keyframes sheen{to{transform:translateX(120%)}}
+
+  /* stats RPG */
+  .stat{display:flex;align-items:center;gap:12px;padding:9px 0}
+  .stat:not(:last-child){border-bottom:1px solid var(--line)}
+  .stat .ic2{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;flex:none;background:var(--accent-soft)}
+  .stat .body{flex:1;min-width:0}
+  .stat .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+  .stat .nm{font-weight:700;font-size:14px}
+  .stat .lv{font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:20px}
+  .stat .track{height:8px;border-radius:8px;background:#eef1f8;overflow:hidden}
+  .stat .bar{height:100%;border-radius:8px;background:var(--grad);width:0;transition:width .9s cubic-bezier(.22,1,.36,1)}
+  .stat.s-force .ic2{background:#fde8e8}
+  .stat.s-disc .ic2{background:#e8efff}
+  .stat.s-clar .ic2{background:#ede9fe}
+  .stat.s-vis .ic2{background:#e6f7ef}
 </style>
 </head>
 <body>
@@ -175,7 +224,11 @@
 
   <!-- ACCUEIL -->
   <section class="view active" id="view-home">
-    <h2 class="section-title">Aujourd'hui en un coup d'œil</h2>
+    <h2 class="section-title">Ton élan</h2>
+    <div class="dash-card" id="homeMomentum"></div>
+    <h2 class="section-title">Tes stats de vie</h2>
+    <div class="dash-card" id="homeStats"></div>
+    <h2 class="section-title">Aujourd'hui</h2>
     <div class="card" id="homeHabits"></div>
     <div class="card" id="homeFocus"></div>
   </section>
@@ -528,14 +581,16 @@ function renderEntries(){
 function renderHome(){
   document.getElementById("hello").textContent=greeting();
   document.getElementById("todayLabel").textContent=cap(frDate(todayKey()));
+  renderGameHome();
   // habitudes du jour
   const hh=document.getElementById("homeHabits");
   if(!DB.habits.length){
     hh.innerHTML='<div class="empty">Commence par créer quelques habitudes 👉<br><button class="btn ghost sm" style="margin-top:10px" onclick="go(\'habits\')">Mes habitudes</button></div>';
   }else{
     const tk=todayKey();const doneN=DB.habits.filter(h=>h.done[tk]).length;
+    const pct=Math.round(doneN/DB.habits.length*100);
     hh.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <strong>Habitudes du jour</strong><span class="pill">${doneN}/${DB.habits.length}</span></div>`+
+        <strong>Habitudes du jour</strong><div class="ring" style="background:conic-gradient(var(--accent) ${pct}%, #eef1f8 0)"><span>${doneN}/${DB.habits.length}</span></div></div>`+
       DB.habits.map(h=>{const done=!!h.done[tk];return `<div class="habit">
         <div class="check ${done?'done':''}" onclick="toggleHabit('${h.id}','${tk}')">${done?'✓':''}</div>
         <div class="name">${esc(h.name)}</div>
@@ -587,6 +642,86 @@ function resetAll(){
 /* ---------- util ---------- */
 function esc(s){return (s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+/* ============================================================
+   GAMIFICATION : 4 stats de vie + momentum
+   ============================================================ */
+// XP cumulés par stat à partir des données
+function statsXP(){
+  let force=0,disc=0,clar=0,vis=0;
+  // Discipline : +2 par habitude cochée (toutes dates)
+  DB.habits.forEach(h=>{disc+=Object.keys(h.done||{}).length*2;});
+  // Force : +6 par séance + 1 par exercice
+  DB.sessions.forEach(s=>{force+=6+(s.ex?s.ex.length:0);});
+  // Clarté : +4 par entrée de journal
+  clar+=DB.entries.length*4;
+  // Vision : +3 par objectif créé, +12 si résolu
+  DB.goals.forEach(g=>{vis+=3+(g.done?12:0);});
+  return {force,disc,clar,vis};
+}
+// niveau à partir des XP (courbe douce et gratifiante)
+function levelFromXP(xp){
+  let lvl=1,need=30,acc=0;
+  while(xp>=acc+need){acc+=need;lvl++;need=Math.round(need*1.35);}
+  return {lvl,into:xp-acc,need,pct:Math.round((xp-acc)/need*100)};
+}
+// un jour est "actif" s'il y a au moins une action ce jour-là
+function activeDays(){
+  const set=new Set();
+  DB.habits.forEach(h=>Object.keys(h.done||{}).forEach(d=>set.add(d)));
+  DB.sessions.forEach(s=>set.add(s.date));
+  DB.entries.forEach(e=>set.add(e.date));
+  DB.goals.forEach(g=>{if(g.created)set.add(g.created);});
+  return set;
+}
+// momentum 0-100 : monte les jours actifs, redescend doucement sinon (14 derniers jours)
+function momentum(){
+  const set=activeDays();let m=0;const d=new Date();d.setDate(d.getDate()-13);
+  for(let i=0;i<14;i++){
+    if(set.has(todayKey(d)))m=Math.min(100,m+13);else m=Math.max(0,m-9);
+    d.setDate(d.getDate()+1);
+  }
+  return Math.round(m);
+}
+function momentumLabel(m){
+  if(m>=85)return {t:"En feu",e:"🔥",hot:true};
+  if(m>=60)return {t:"Lancé",e:"🚀",hot:false};
+  if(m>=30)return {t:"En route",e:"⚡",hot:false};
+  if(m>=10)return {t:"Réveil",e:"🌱",hot:false};
+  return {t:"Endormi",e:"😴",hot:false};
+}
+function renderGameHome(){
+  // momentum
+  const m=momentum();const ml=momentumLabel(m);
+  document.getElementById("homeMomentum").innerHTML=`
+    <div class="mom-top">
+      <div class="mom-flame">${ml.e}</div>
+      <div class="mom-main">
+        <div class="mom-label">${ml.t}</div>
+        <div class="mom-sub">Ton élan est à ${m}/100 — reste régulier pour le garder vivant</div>
+      </div>
+    </div>
+    <div class="mom-bar"><div class="mom-fill ${ml.hot?'hot':''}" id="momFill"></div></div>`;
+  setTimeout(()=>{const f=document.getElementById("momFill");if(f)f.style.width=m+"%";},60);
+  // stats
+  const x=statsXP();
+  const rows=[
+    {cls:"s-force",ic:"💪",nm:"Force",xp:x.force},
+    {cls:"s-disc",ic:"🎯",nm:"Discipline",xp:x.disc},
+    {cls:"s-clar",ic:"🧠",nm:"Clarté",xp:x.clar},
+    {cls:"s-vis",ic:"🧭",nm:"Vision",xp:x.vis}
+  ];
+  document.getElementById("homeStats").innerHTML=rows.map(r=>{
+    const l=levelFromXP(r.xp);
+    return `<div class="stat ${r.cls}">
+      <div class="ic2">${r.ic}</div>
+      <div class="body">
+        <div class="top"><span class="nm">${r.nm}</span><span class="lv">Niv. ${l.lvl}</span></div>
+        <div class="track"><div class="bar" data-w="${l.pct}"></div></div>
+      </div></div>`;
+  }).join("");
+  setTimeout(()=>{document.querySelectorAll("#homeStats .bar").forEach(b=>b.style.width=b.dataset.w+"%");},60);
+}
 
 function renderAll(){renderHome();renderHabits();renderSessions();renderGoals();renderEntries();}
 
