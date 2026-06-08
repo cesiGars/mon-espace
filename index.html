@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#faf9f6">
+<title>Mon Espace</title>
+<style>
+  :root{
+    --bg:#faf9f6;
+    --card:#ffffff;
+    --ink:#1f1d1a;
+    --muted:#9b968d;
+    --line:#ece9e2;
+    --accent:#3a7d5d;
+    --accent-soft:#e8f1ec;
+    --warn:#c77b4a;
+    --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);
+    --radius:18px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:90px;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:0 18px}
+  header.top{
+    padding:28px 0 14px;
+  }
+  header.top h1{
+    font-size:26px;margin:0;font-weight:700;letter-spacing:-.02em;
+  }
+  header.top .date{color:var(--muted);font-size:14px;margin-top:2px}
+  .greeting{color:var(--muted);font-size:15px;margin-top:4px}
+
+  /* tabs / nav */
+  nav.tabs{
+    position:fixed;bottom:0;left:0;right:0;
+    background:rgba(255,255,255,.86);
+    backdrop-filter:saturate(180%) blur(14px);
+    -webkit-backdrop-filter:saturate(180%) blur(14px);
+    border-top:1px solid var(--line);
+    display:flex;justify-content:center;gap:4px;
+    padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+    z-index:50;
+  }
+  nav.tabs button{
+    flex:1;max-width:120px;border:none;background:none;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:6px 4px;border-radius:12px;color:var(--muted);font-size:11px;
+    font-family:inherit;transition:color .15s;
+  }
+  nav.tabs button .ic{font-size:20px;line-height:1}
+  nav.tabs button.active{color:var(--accent)}
+  nav.tabs button.active .ic{transform:translateY(-1px)}
+
+  section.view{display:none;animation:fade .25s ease}
+  section.view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  h2.section-title{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin:22px 2px 12px}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:16px;margin-bottom:12px;
+  }
+
+  /* buttons */
+  .btn{
+    border:none;border-radius:12px;padding:11px 16px;font-size:15px;font-weight:600;
+    font-family:inherit;cursor:pointer;background:var(--accent);color:#fff;transition:filter .15s,transform .05s;
+  }
+  .btn:active{transform:scale(.97)}
+  .btn.ghost{background:var(--accent-soft);color:var(--accent)}
+  .btn.subtle{background:#f1efe9;color:var(--ink)}
+  .btn.sm{padding:7px 12px;font-size:13px;border-radius:10px}
+  .btn.full{width:100%}
+  .iconbtn{border:none;background:none;cursor:pointer;color:var(--muted);font-size:18px;padding:4px 8px;border-radius:8px}
+  .iconbtn:hover{color:var(--ink);background:#f3f1ec}
+
+  input,textarea,select{
+    font-family:inherit;font-size:15px;color:var(--ink);
+    border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;
+    background:#fff;outline:none;transition:border-color .15s;
+  }
+  input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+  textarea{resize:vertical;min-height:90px;line-height:1.55}
+  label.fld{display:block;font-size:13px;color:var(--muted);margin:0 2px 5px;font-weight:600}
+  .row{display:flex;gap:8px}
+  .row > *{flex:1}
+
+  .empty{color:var(--muted);text-align:center;padding:26px 10px;font-size:14px}
+
+  /* habits */
+  .habit{display:flex;align-items:center;gap:14px;padding:12px 4px;border-bottom:1px solid var(--line)}
+  .habit:last-child{border-bottom:none}
+  .check{
+    width:30px;height:30px;border-radius:50%;border:2px solid var(--line);
+    flex:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:16px;transition:all .15s;background:#fff;
+  }
+  .check.done{background:var(--accent);border-color:var(--accent)}
+  .habit .name{flex:1;font-weight:500}
+  .habit .name small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+  .streak{font-size:13px;color:var(--warn);font-weight:600;white-space:nowrap}
+  .streak.zero{color:var(--muted);font-weight:400}
+  .weekdots{display:flex;gap:4px;margin-top:3px}
+  .weekdots span{width:7px;height:7px;border-radius:50%;background:var(--line)}
+  .weekdots span.on{background:var(--accent)}
+
+  /* workouts */
+  .exline{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+  .exline input{flex:1}
+  .exline .w,.exline .s,.exline .r{max-width:74px;text-align:center}
+  .session{margin-bottom:14px}
+  .session .shead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  .session .shead .d{font-weight:700}
+  .session .shead .n{color:var(--muted);font-size:13px}
+  table.ex{width:100%;border-collapse:collapse;font-size:14px}
+  table.ex th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:2px 6px}
+  table.ex td{padding:5px 6px;border-top:1px solid var(--line)}
+  table.ex td.num{text-align:center;color:var(--ink);font-variant-numeric:tabular-nums}
+  .pr{color:var(--accent);font-weight:600;font-size:11px;margin-left:4px}
+
+  /* goals */
+  .goal{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid var(--line)}
+  .goal:last-child{border-bottom:none}
+  .goal.done .gtext{text-decoration:line-through;color:var(--muted)}
+  .gtext{flex:1}
+  .gtext small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+
+  /* journal */
+  .moods{display:flex;gap:8px;margin:6px 0 2px}
+  .moods button{flex:1;font-size:24px;background:#f6f4ef;border:2px solid transparent;border-radius:12px;padding:8px 0;cursor:pointer;transition:all .12s}
+  .moods button.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .entry{padding:14px 0;border-bottom:1px solid var(--line)}
+  .entry:last-child{border-bottom:none}
+  .entry .eh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .entry .eh .ed{font-weight:600;font-size:14px}
+  .entry .eh .em{font-size:20px}
+  .entry .etext{white-space:pre-wrap;font-size:15px;color:#3a3833}
+
+  .dim{color:var(--muted);font-size:13px}
+  .toolbar{display:flex;gap:8px;justify-content:flex-end;margin:18px 0 4px;flex-wrap:wrap}
+  .pill{display:inline-block;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px}
+  .toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:30px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99}
+  .toast.show{opacity:1}
+  hr.sep{border:none;border-top:1px solid var(--line);margin:14px 0}
+
+  .clouddot{border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:4px;font-family:inherit}
+  .clouddot.on{color:var(--accent);border-color:var(--accent-soft);background:var(--accent-soft)}
+  .clouddot.sync{color:var(--warn)}
+  .clouddot.err{color:#c0392b;border-color:#f3d3cd;background:#fbeae7}
+  .auth-status{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:10px}
+  .auth-status .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+  .auth-status.connected .dot{background:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div>
+        <h1 id="hello">Bonjour</h1>
+        <div class="date" id="todayLabel"></div>
+      </div>
+      <button id="cloudDot" class="clouddot off" onclick="go('settings')" title="Synchro">☁ <span id="cloudDotTxt">Hors-ligne</span></button>
+    </div>
+  </header>
+
+  <!-- ACCUEIL -->
+  <section class="view active" id="view-home">
+    <h2 class="section-title">Aujourd'hui en un coup d'œil</h2>
+    <div class="card" id="homeHabits"></div>
+    <div class="card" id="homeFocus"></div>
+  </section>
+
+  <!-- HABITUDES -->
+  <section class="view" id="view-habits">
+    <h2 class="section-title">Mes habitudes</h2>
+    <div class="card" id="habitList"></div>
+    <div class="card">
+      <label class="fld">Nouvelle habitude</label>
+      <div class="row">
+        <input id="newHabit" placeholder="ex. Boire 2L d'eau" maxlength="60">
+        <button class="btn" style="flex:none" onclick="addHabit()">Ajouter</button>
+      </div>
+      <input id="newHabitNote" placeholder="petite note (facultatif)" maxlength="60" style="margin-top:8px">
+    </div>
+  </section>
+
+  <!-- MUSCU -->
+  <section class="view" id="view-gym">
+    <h2 class="section-title">Nouvelle séance</h2>
+    <div class="card">
+      <div class="row">
+        <div style="flex:1.4"><label class="fld">Date</label><input type="date" id="wDate"></div>
+        <div style="flex:2"><label class="fld">Nom de la séance</label><input id="wName" placeholder="ex. Push / Pull / Jambes"></div>
+      </div>
+      <hr class="sep">
+      <label class="fld">Exercices</label>
+      <div id="exRows"></div>
+      <button class="btn ghost sm" onclick="addExRow()">+ Exercice</button>
+      <button class="btn full" style="margin-top:12px" onclick="saveSession()">Enregistrer la séance</button>
+    </div>
+    <h2 class="section-title">Historique</h2>
+    <div class="card" id="sessionList"></div>
+  </section>
+
+  <!-- OBJECTIFS -->
+  <section class="view" id="view-goals">
+    <h2 class="section-title">Objectifs &amp; questions à résoudre</h2>
+    <div class="card">
+      <label class="fld">Quelque chose à résoudre, un objectif, une question</label>
+      <input id="newGoal" placeholder="ex. Trouver une routine de sommeil stable" maxlength="120">
+      <input id="newGoalNote" placeholder="détail / pourquoi (facultatif)" maxlength="160" style="margin-top:8px">
+      <button class="btn full" style="margin-top:10px" onclick="addGoal()">Ajouter</button>
+    </div>
+    <div class="card" id="goalList"></div>
+  </section>
+
+  <!-- JOURNAL -->
+  <section class="view" id="view-journal">
+    <h2 class="section-title">Comment tu te sens aujourd'hui ?</h2>
+    <div class="card">
+      <div class="moods" id="moodPicker">
+        <button data-m="1" title="Très dur">😞</button>
+        <button data-m="2" title="Mitigé">😕</button>
+        <button data-m="3" title="Neutre">😐</button>
+        <button data-m="4" title="Bien">🙂</button>
+        <button data-m="5" title="Au top">😄</button>
+      </div>
+      <textarea id="journalText" placeholder="Écris ce que tu as en tête, ce qui s'est passé, ce que tu retiens…"></textarea>
+      <button class="btn full" style="margin-top:10px" onclick="saveEntry()">Enregistrer</button>
+    </div>
+    <h2 class="section-title">Mes entrées</h2>
+    <div class="card" id="entryList"></div>
+  </section>
+
+  <!-- réglages -->
+  <section class="view" id="view-settings">
+    <h2 class="section-title">Synchro entre appareils</h2>
+
+    <!-- étape 1 : config firebase (si pas encore intégrée) -->
+    <div class="card" id="cfgCard">
+      <div id="cfgMissing">
+        <strong>Connexion au cloud</strong>
+        <p class="dim" style="margin-top:4px">Colle ici ta configuration Firebase (je t'ai donné le guide pour l'obtenir). Une seule fois par appareil.</p>
+        <textarea id="cfgInput" placeholder='Colle ici le bloc qui ressemble à { apiKey: "...", authDomain: "...", projectId: "...", ... }' style="min-height:120px;font-family:ui-monospace,Menlo,monospace;font-size:13px"></textarea>
+        <button class="btn full" style="margin-top:8px" onclick="saveCfg()">Enregistrer la configuration</button>
+      </div>
+      <div id="cfgPresent" style="display:none">
+        <div class="auth-status"><span class="dot"></span><span>Cloud configuré (projet <span id="cfgProj">—</span>)</span></div>
+        <button class="btn subtle sm" onclick="clearCfg()">Changer la configuration</button>
+      </div>
+    </div>
+
+    <!-- étape 2 : connexion compte -->
+    <div class="card" id="authCard" style="display:none">
+      <div id="authLoggedOut">
+        <strong>Ton compte</strong>
+        <p class="dim" style="margin-top:4px">Connecte-toi avec le même email sur tous tes appareils pour tout synchroniser.</p>
+        <label class="fld" style="margin-top:6px">Email</label>
+        <input id="authEmail" type="email" autocomplete="username" placeholder="toi@email.com">
+        <label class="fld" style="margin-top:8px">Mot de passe</label>
+        <input id="authPass" type="password" autocomplete="current-password" placeholder="••••••••">
+        <div class="row" style="margin-top:10px">
+          <button class="btn" onclick="cloudLogin()">Se connecter</button>
+          <button class="btn ghost" onclick="cloudSignup()">Créer le compte</button>
+        </div>
+        <p class="dim" id="authMsg" style="margin-top:8px"></p>
+      </div>
+      <div id="authLoggedIn" style="display:none">
+        <div class="auth-status connected"><span class="dot"></span><span>Connecté — <span id="authWho">—</span></span></div>
+        <div class="dim" id="syncInfo" style="margin-bottom:10px">Synchro active ✓</div>
+        <button class="btn subtle sm" onclick="cloudLogout()">Se déconnecter</button>
+      </div>
+    </div>
+
+    <h2 class="section-title">Sauvegarde manuelle</h2>
+    <div class="card">
+      <p class="dim" style="margin-top:0">Pratique pour garder une copie de secours de tes données.</p>
+      <div class="row">
+        <button class="btn ghost" onclick="exportData()">Exporter (fichier)</button>
+        <button class="btn subtle" onclick="document.getElementById('importFile').click()">Importer un fichier</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(event)">
+      <hr class="sep">
+      <p class="dim" style="margin-bottom:6px">Astuce : sur ton téléphone, ouvre ce fichier dans le navigateur puis « Ajouter à l'écran d'accueil » pour l'utiliser comme une appli.</p>
+    </div>
+    <div class="card">
+      <button class="btn subtle full" onclick="resetAll()" style="color:var(--warn)">Tout réinitialiser (cet appareil)</button>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs" id="tabs">
+  <button data-v="home" class="active"><span class="ic">🏠</span>Accueil</button>
+  <button data-v="habits"><span class="ic">✓</span>Habitudes</button>
+  <button data-v="gym"><span class="ic">🏋️</span>Muscu</button>
+  <button data-v="goals"><span class="ic">🎯</span>Objectifs</button>
+  <button data-v="journal"><span class="ic">📓</span>Journal</button>
+  <button data-v="settings"><span class="ic">⚙️</span>Réglages</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+/* ====== CONFIG FIREBASE (pré-intégrée si fournie) ======
+   Laisse null pour saisir la config dans Réglages, ou colle ton objet ici. */
+const BAKED_CONFIG = {
+  apiKey: "AIzaSyBG8euBSBnIuZoa2ofuVznz_JV4tePIG9U",
+  authDomain: "cesar-productif.firebaseapp.com",
+  projectId: "cesar-productif",
+  storageBucket: "cesar-productif.firebasestorage.app",
+  messagingSenderId: "363253982475",
+  appId: "1:363253982475:web:b80249ed18934a5e5eae0e"
+};
+/* ======================================================== */
+
+/* ---------- état ---------- */
+const KEY="mon-espace-v1";
+let DB=load();
+function load(){
+  try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){}
+  return {habits:[],sessions:[],goals:[],entries:[]};
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(DB));pushCloud();}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+
+/* ---------- dates ---------- */
+function todayKey(d=new Date()){return d.toISOString().slice(0,10);}
+function frDate(key){
+  const d=new Date(key+"T00:00:00");
+  return d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+}
+function shortDate(key){
+  const d=new Date(key+"T00:00:00");
+  return d.toLocaleDateString("fr-FR",{day:"numeric",month:"short"});
+}
+
+/* ---------- nav ---------- */
+document.getElementById("tabs").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  go(b.dataset.v);
+});
+function go(v){
+  document.querySelectorAll(".view").forEach(s=>s.classList.remove("active"));
+  document.getElementById("view-"+v).classList.add("active");
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("active",b.dataset.v===v));
+  window.scrollTo(0,0);
+}
+
+/* ---------- toast ---------- */
+let tT;
+function toast(msg){
+  const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");
+  clearTimeout(tT);tT=setTimeout(()=>t.classList.remove("show"),1600);
+}
+
+/* ---------- HABITUDES ---------- */
+function addHabit(){
+  const i=document.getElementById("newHabit");
+  const n=document.getElementById("newHabitNote");
+  const name=i.value.trim();if(!name)return;
+  DB.habits.push({id:uid(),name,note:n.value.trim(),done:{}});
+  i.value="";n.value="";save();renderHabits();renderHome();toast("Habitude ajoutée");
+}
+function toggleHabit(id,dayKey){
+  const h=DB.habits.find(x=>x.id===id);if(!h)return;
+  if(h.done[dayKey])delete h.done[dayKey];else h.done[dayKey]=true;
+  save();renderHabits();renderHome();
+}
+function delHabit(id){
+  if(!confirm("Supprimer cette habitude ?"))return;
+  DB.habits=DB.habits.filter(x=>x.id!==id);save();renderHabits();renderHome();
+}
+function streakOf(h){
+  let s=0;const d=new Date();
+  // si pas fait aujourd'hui, on compte à partir d'hier
+  if(!h.done[todayKey(d)])d.setDate(d.getDate()-1);
+  while(h.done[todayKey(d)]){s++;d.setDate(d.getDate()-1);}
+  return s;
+}
+function last7(h){
+  const out=[];const d=new Date();d.setDate(d.getDate()-6);
+  for(let i=0;i<7;i++){out.push(!!h.done[todayKey(d)]);d.setDate(d.getDate()+1);}
+  return out;
+}
+function renderHabits(){
+  const el=document.getElementById("habitList");
+  if(!DB.habits.length){el.innerHTML='<div class="empty">Aucune habitude pour l\'instant.<br>Ajoute ta première en dessous 👇</div>';return;}
+  const tk=todayKey();
+  el.innerHTML=DB.habits.map(h=>{
+    const done=!!h.done[tk];const st=streakOf(h);
+    const dots=last7(h).map(o=>`<span class="${o?'on':''}"></span>`).join("");
+    return `<div class="habit">
+      <div class="check ${done?'done':''}" onclick="toggleHabit('${h.id}','${tk}')">${done?'✓':''}</div>
+      <div class="name">${esc(h.name)}${h.note?`<small>${esc(h.note)}</small>`:''}<div class="weekdots">${dots}</div></div>
+      <div class="streak ${st?'':'zero'}">${st?'🔥 '+st+'j':'—'}</div>
+      <button class="iconbtn" onclick="delHabit('${h.id}')">✕</button>
+    </div>`;
+  }).join("");
+}
+
+/* ---------- MUSCU ---------- */
+function addExRow(name="",w="",s="",r=""){
+  const wrap=document.getElementById("exRows");
+  const div=document.createElement("div");
+  div.className="exline";
+  div.innerHTML=`<input class="exn" placeholder="Exercice" value="${esc(name)}">
+    <input class="w" type="number" inputmode="decimal" placeholder="kg" value="${w}">
+    <input class="s" type="number" inputmode="numeric" placeholder="séries" value="${s}">
+    <input class="r" type="number" inputmode="numeric" placeholder="reps" value="${r}">
+    <button class="iconbtn" onclick="this.parentNode.remove()">✕</button>`;
+  wrap.appendChild(div);
+}
+function saveSession(){
+  const date=document.getElementById("wDate").value||todayKey();
+  const name=document.getElementById("wName").value.trim()||"Séance";
+  const ex=[...document.querySelectorAll("#exRows .exline")].map(l=>({
+    name:l.querySelector(".exn").value.trim(),
+    w:l.querySelector(".w").value,
+    s:l.querySelector(".s").value,
+    r:l.querySelector(".r").value
+  })).filter(e=>e.name);
+  if(!ex.length){toast("Ajoute au moins un exercice");return;}
+  DB.sessions.push({id:uid(),date,name,ex});
+  save();
+  document.getElementById("wName").value="";
+  document.getElementById("exRows").innerHTML="";addExRow();
+  renderSessions();toast("Séance enregistrée 💪");
+}
+function delSession(id){
+  if(!confirm("Supprimer cette séance ?"))return;
+  DB.sessions=DB.sessions.filter(s=>s.id!==id);save();renderSessions();
+}
+// record perso = poids max déjà soulevé pour cet exercice
+function isPR(exName,weight,beforeDate){
+  const w=parseFloat(weight);if(isNaN(w))return false;
+  let max=0;
+  DB.sessions.forEach(s=>{
+    if(s.date>=beforeDate)return;
+    s.ex.forEach(e=>{if(e.name.toLowerCase()===exName.toLowerCase()){const ew=parseFloat(e.w);if(!isNaN(ew)&&ew>max)max=ew;}});
+  });
+  return w>max&&max>0;
+}
+function renderSessions(){
+  const el=document.getElementById("sessionList");
+  if(!DB.sessions.length){el.innerHTML='<div class="empty">Pas encore de séance enregistrée.</div>';return;}
+  const sorted=[...DB.sessions].sort((a,b)=>b.date.localeCompare(a.date));
+  el.innerHTML=sorted.map(s=>{
+    const rows=s.ex.map(e=>{
+      const pr=isPR(e.name,e.w,s.date)?'<span class="pr">PR ✦</span>':'';
+      return `<tr><td>${esc(e.name)}${pr}</td><td class="num">${e.w||'–'}</td><td class="num">${e.s||'–'}</td><td class="num">${e.r||'–'}</td></tr>`;
+    }).join("");
+    return `<div class="session">
+      <div class="shead"><span class="d">${esc(s.name)}</span><span class="n">${shortDate(s.date)} <button class="iconbtn" onclick="delSession('${s.id}')">✕</button></span></div>
+      <table class="ex"><tr><th>Exercice</th><th style="text-align:center">kg</th><th style="text-align:center">séries</th><th style="text-align:center">reps</th></tr>${rows}</table>
+    </div>`;
+  }).join('<hr class="sep">');
+}
+
+/* ---------- OBJECTIFS ---------- */
+function addGoal(){
+  const i=document.getElementById("newGoal");const n=document.getElementById("newGoalNote");
+  const t=i.value.trim();if(!t)return;
+  DB.goals.unshift({id:uid(),text:t,note:n.value.trim(),done:false,created:todayKey()});
+  i.value="";n.value="";save();renderGoals();renderHome();toast("Ajouté à ta liste");
+}
+function toggleGoal(id){
+  const g=DB.goals.find(x=>x.id===id);if(!g)return;g.done=!g.done;save();renderGoals();renderHome();
+}
+function delGoal(id){
+  DB.goals=DB.goals.filter(x=>x.id!==id);save();renderGoals();renderHome();
+}
+function renderGoals(){
+  const el=document.getElementById("goalList");
+  if(!DB.goals.length){el.innerHTML='<div class="empty">Aucun objectif pour l\'instant.<br>Note ce que tu veux résoudre ou atteindre.</div>';return;}
+  const open=DB.goals.filter(g=>!g.done),done=DB.goals.filter(g=>g.done);
+  const render=g=>`<div class="goal ${g.done?'done':''}">
+    <div class="check ${g.done?'done':''}" onclick="toggleGoal('${g.id}')">${g.done?'✓':''}</div>
+    <div class="gtext">${esc(g.text)}${g.note?`<small>${esc(g.note)}</small>`:''}</div>
+    <button class="iconbtn" onclick="delGoal('${g.id}')">✕</button></div>`;
+  el.innerHTML=open.map(render).join("")+
+    (done.length?`<hr class="sep"><div class="dim" style="margin-bottom:4px">Résolus (${done.length})</div>`+done.map(render).join(""):"");
+}
+
+/* ---------- JOURNAL ---------- */
+let curMood=0;
+document.getElementById("moodPicker").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  curMood=+b.dataset.m;
+  document.querySelectorAll("#moodPicker button").forEach(x=>x.classList.toggle("sel",x===b));
+});
+function saveEntry(){
+  const t=document.getElementById("journalText").value.trim();
+  if(!t&&!curMood){toast("Écris un mot ou choisis une humeur");return;}
+  DB.entries.unshift({id:uid(),date:todayKey(),mood:curMood,text:t});
+  save();
+  document.getElementById("journalText").value="";curMood=0;
+  document.querySelectorAll("#moodPicker button").forEach(x=>x.classList.remove("sel"));
+  renderEntries();toast("Entrée enregistrée");
+}
+function delEntry(id){
+  if(!confirm("Supprimer cette entrée ?"))return;
+  DB.entries=DB.entries.filter(e=>e.id!==id);save();renderEntries();
+}
+const MOJI={1:"😞",2:"😕",3:"😐",4:"🙂",5:"😄"};
+function renderEntries(){
+  const el=document.getElementById("entryList");
+  if(!DB.entries.length){el.innerHTML='<div class="empty">Ton journal est vide pour le moment.</div>';return;}
+  el.innerHTML=DB.entries.map(e=>`<div class="entry">
+    <div class="eh"><span class="ed">${frDate(e.date)}</span><span class="em">${e.mood?MOJI[e.mood]:''} <button class="iconbtn" onclick="delEntry('${e.id}')">✕</button></span></div>
+    ${e.text?`<div class="etext">${esc(e.text)}</div>`:''}</div>`).join("");
+}
+
+/* ---------- ACCUEIL ---------- */
+function renderHome(){
+  document.getElementById("hello").textContent=greeting();
+  document.getElementById("todayLabel").textContent=cap(frDate(todayKey()));
+  // habitudes du jour
+  const hh=document.getElementById("homeHabits");
+  if(!DB.habits.length){
+    hh.innerHTML='<div class="empty">Commence par créer quelques habitudes 👉<br><button class="btn ghost sm" style="margin-top:10px" onclick="go(\'habits\')">Mes habitudes</button></div>';
+  }else{
+    const tk=todayKey();const doneN=DB.habits.filter(h=>h.done[tk]).length;
+    hh.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <strong>Habitudes du jour</strong><span class="pill">${doneN}/${DB.habits.length}</span></div>`+
+      DB.habits.map(h=>{const done=!!h.done[tk];return `<div class="habit">
+        <div class="check ${done?'done':''}" onclick="toggleHabit('${h.id}','${tk}')">${done?'✓':''}</div>
+        <div class="name">${esc(h.name)}</div>
+        <div class="streak ${streakOf(h)?'':'zero'}">${streakOf(h)?'🔥 '+streakOf(h):'—'}</div></div>`;}).join("");
+  }
+  // focus : objectifs ouverts
+  const hf=document.getElementById("homeFocus");
+  const open=DB.goals.filter(g=>!g.done).slice(0,3);
+  if(open.length){
+    hf.innerHTML=`<div style="margin-bottom:6px"><strong>Sur quoi je travaille</strong></div>`+
+      open.map(g=>`<div class="goal"><div class="check" onclick="toggleGoal('${g.id}')"></div><div class="gtext">${esc(g.text)}</div></div>`).join("");
+  }else{
+    hf.innerHTML='<div style="margin-bottom:6px"><strong>Sur quoi je travaille</strong></div><div class="dim">Aucun objectif en cours. <a href="#" onclick="go(\'goals\');return false" style="color:var(--accent)">En ajouter un</a></div>';
+  }
+}
+function greeting(){
+  const h=new Date().getHours();
+  if(h<6)return "Bonne nuit, Cesar";
+  if(h<12)return "Bonjour, Cesar";
+  if(h<18)return "Bel après-midi, Cesar";
+  return "Bonsoir, Cesar";
+}
+
+/* ---------- export / import ---------- */
+function exportData(){
+  const blob=new Blob([JSON.stringify(DB,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="mon-espace-"+todayKey()+".json";a.click();
+  toast("Fichier exporté");
+}
+function importData(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const d=JSON.parse(rd.result);
+      if(!confirm("Remplacer les données de cet appareil par celles du fichier ?"))return;
+      DB={habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[]};
+      save();renderAll();toast("Données importées ✓");
+    }catch(e){toast("Fichier illisible");}
+  };
+  rd.readAsText(f);ev.target.value="";
+}
+function resetAll(){
+  if(!confirm("Effacer TOUTES tes données sur cet appareil ? (pense à exporter avant)"))return;
+  DB={habits:[],sessions:[],goals:[],entries:[]};save();renderAll();toast("Réinitialisé");
+}
+
+/* ---------- util ---------- */
+function esc(s){return (s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+function renderAll(){renderHome();renderHabits();renderSessions();renderGoals();renderEntries();}
+
+/* ============================================================
+   SYNCHRO CLOUD (Firebase Auth + Firestore, temps réel)
+   ============================================================ */
+const CFG_KEY="me-fbcfg";
+let cloud={ready:false,uid:null,unsub:null,gotFirst:false};
+let writeT=null;
+
+function getCfg(){
+  if(BAKED_CONFIG)return BAKED_CONFIG;
+  try{return JSON.parse(localStorage.getItem(CFG_KEY)||"null");}catch(e){return null;}
+}
+// accepte un objet JSON OU un bloc copié depuis la console Firebase
+function parseCfg(raw){
+  raw=raw.trim();
+  try{return JSON.parse(raw);}catch(e){}
+  // extraire l'objet { ... } et le rendre JSON-compatible
+  const m=raw.match(/\{[\s\S]*\}/);
+  if(!m)return null;
+  let body=m[0]
+    .replace(/([{,]\s*)([A-Za-z0-9_]+)\s*:/g,'$1"$2":') // clés sans guillemets
+    .replace(/'/g,'"')                                    // apostrophes -> guillemets
+    .replace(/,\s*}/g,'}');                               // virgule finale
+  try{return JSON.parse(body);}catch(e){return null;}
+}
+function saveCfg(){
+  const raw=document.getElementById("cfgInput").value;
+  const cfg=parseCfg(raw);
+  if(!cfg||!cfg.apiKey||!cfg.projectId){toast("Configuration non reconnue");return;}
+  localStorage.setItem(CFG_KEY,JSON.stringify(cfg));
+  toast("Configuration enregistrée");
+  initCloud();renderCloudUI();
+}
+function clearCfg(){
+  if(!confirm("Retirer la configuration cloud de cet appareil ?"))return;
+  localStorage.removeItem(CFG_KEY);location.reload();
+}
+
+function initCloud(){
+  const cfg=getCfg();
+  if(!cfg||cloud.ready||typeof firebase==="undefined")return;
+  try{
+    firebase.initializeApp(cfg);
+    cloud.ready=true;
+    firebase.auth().onAuthStateChanged(u=>{
+      if(u){onLoggedIn(u);}else{onLoggedOut();}
+      renderCloudUI();
+    });
+  }catch(e){console.error(e);toast("Erreur de configuration");}
+}
+
+function onLoggedIn(u){
+  cloud.uid=u.uid;cloud.gotFirst=false;
+  setCloudDot("sync","Connexion…");
+  const ref=firebase.firestore().collection("spaces").doc(u.uid);
+  if(cloud.unsub)cloud.unsub();
+  cloud.unsub=ref.onSnapshot(snap=>{
+    // ignorer l'écho de nos propres écritures locales
+    if(snap.metadata.hasPendingWrites){setCloudDot("on","Synchronisé");return;}
+    if(snap.exists && snap.data() && snap.data().db){
+      DB=normalize(snap.data().db);
+      localStorage.setItem(KEY,JSON.stringify(DB));
+      renderAll();renderCloudUI();
+      setCloudDot("on","Synchronisé");
+    }else if(!cloud.gotFirst){
+      // pas encore de données cloud -> on envoie celles de cet appareil
+      pushNow();
+    }
+    cloud.gotFirst=true;
+  },err=>{console.error(err);setCloudDot("err","Erreur sync");});
+}
+function onLoggedOut(){
+  cloud.uid=null;if(cloud.unsub){cloud.unsub();cloud.unsub=null;}
+  setCloudDot(getCfg()?"off":"off",getCfg()?"Non connecté":"Hors-ligne");
+}
+
+function pushCloud(){
+  if(!cloud.uid)return;
+  clearTimeout(writeT);
+  setCloudDot("sync","Sauvegarde…");
+  writeT=setTimeout(pushNow,700);
+}
+function pushNow(){
+  if(!cloud.uid)return;
+  firebase.firestore().collection("spaces").doc(cloud.uid)
+    .set({db:DB,updatedAt:Date.now()})
+    .then(()=>setCloudDot("on","Synchronisé"))
+    .catch(e=>{console.error(e);setCloudDot("err","Erreur sync");});
+}
+function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[]};}
+
+/* ---- auth actions ---- */
+function authErr(e){
+  const map={"auth/invalid-email":"Email invalide","auth/missing-password":"Entre un mot de passe",
+    "auth/weak-password":"Mot de passe trop court (6 caractères min)","auth/email-already-in-use":"Ce compte existe déjà — connecte-toi",
+    "auth/invalid-credential":"Email ou mot de passe incorrect","auth/wrong-password":"Mot de passe incorrect","auth/user-not-found":"Aucun compte avec cet email"};
+  return map[e.code]||e.message;
+}
+function cloudLogin(){
+  const e=document.getElementById("authEmail").value.trim();
+  const p=document.getElementById("authPass").value;
+  document.getElementById("authMsg").textContent="";
+  firebase.auth().signInWithEmailAndPassword(e,p)
+    .then(()=>toast("Connecté ✓"))
+    .catch(err=>document.getElementById("authMsg").textContent=authErr(err));
+}
+function cloudSignup(){
+  const e=document.getElementById("authEmail").value.trim();
+  const p=document.getElementById("authPass").value;
+  document.getElementById("authMsg").textContent="";
+  firebase.auth().createUserWithEmailAndPassword(e,p)
+    .then(()=>toast("Compte créé ✓"))
+    .catch(err=>document.getElementById("authMsg").textContent=authErr(err));
+}
+function cloudLogout(){
+  if(!confirm("Se déconnecter de cet appareil ? (tes données restent dans le cloud)"))return;
+  firebase.auth().signOut().then(()=>toast("Déconnecté"));
+}
+
+/* ---- UI synchro ---- */
+function setCloudDot(state,txt){
+  const d=document.getElementById("cloudDot");
+  d.className="clouddot "+(state==="on"?"on":state==="sync"?"sync":state==="err"?"err":"off");
+  document.getElementById("cloudDotTxt").textContent=txt;
+}
+function renderCloudUI(){
+  const cfg=getCfg();
+  const baked=!!BAKED_CONFIG;
+  // carte config
+  document.getElementById("cfgMissing").style.display=(cfg&&!baked)?"none":(baked?"none":"block");
+  document.getElementById("cfgPresent").style.display=cfg?"block":"none";
+  if(cfg){document.getElementById("cfgProj").textContent=cfg.projectId||"—";
+    if(baked)document.getElementById("cfgCard").style.display="none";}
+  // carte auth
+  document.getElementById("authCard").style.display=cfg?"block":"none";
+  const inU=!!cloud.uid;
+  document.getElementById("authLoggedOut").style.display=inU?"none":"block";
+  document.getElementById("authLoggedIn").style.display=inU?"block":"none";
+  if(inU&&firebase.auth().currentUser){document.getElementById("authWho").textContent=firebase.auth().currentUser.email;}
+}
+
+/* ---------- init ---------- */
+document.getElementById("wDate").value=todayKey();
+addExRow();
+renderAll();
+setCloudDot("off",getCfg()?"Non connecté":"Hors-ligne");
+renderCloudUI();
+initCloud();
+</script>
+</body>
+</html>
