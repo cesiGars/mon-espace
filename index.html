@@ -129,6 +129,9 @@
   .weekdots{display:flex;gap:4px;margin-top:3px}
   .weekdots span{width:7px;height:7px;border-radius:50%;background:var(--line)}
   .weekdots span.on{background:var(--accent)}
+  .htag{font-size:10px;font-weight:700;color:var(--muted);background:#f1f4fb;border-radius:8px;padding:1px 6px;vertical-align:middle}
+  .htag.stat{background:var(--accent-soft);font-size:12px;padding:1px 5px}
+  .weekdots-w{font-size:12px;color:var(--muted);font-weight:600}
 
   /* workouts */
   .exline{display:flex;gap:8px;margin-bottom:8px;align-items:center}
@@ -307,6 +310,18 @@
         <button class="btn" style="flex:none" onclick="addHabit()">Ajouter</button>
       </div>
       <input id="newHabitNote" placeholder="petite note (facultatif)" maxlength="60" style="margin-top:8px">
+      <div class="row" style="margin-top:8px">
+        <select id="newHabitFreq">
+          <option value="daily">📅 Quotidienne</option>
+          <option value="weekly">🗓️ Hebdomadaire</option>
+        </select>
+        <select id="newHabitStat" title="Quelle stat de vie ça nourrit">
+          <option value="disc">🎯 Discipline</option>
+          <option value="force">💪 Force</option>
+          <option value="clar">🧠 Clarté</option>
+          <option value="vis">🧭 Vision</option>
+        </select>
+      </div>
     </div>
   </section>
 
@@ -515,8 +530,8 @@ const BAKED_CONFIG = {
 const KEY="mon-espace-v1";
 let DB=load();
 function load(){
-  try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){}
-  return {habits:[],sessions:[],goals:[],entries:[]};
+  try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);d.settings=d.settings||{};return d;}}catch(e){}
+  return {habits:[],sessions:[],goals:[],entries:[],settings:{}};
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(DB));pushCloud();}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
@@ -531,6 +546,13 @@ function shortDate(key){
   const d=new Date(key+"T00:00:00");
   return d.toLocaleDateString("fr-FR",{day:"numeric",month:"short"});
 }
+// semaines (lundi = début)
+function weekStart(d=new Date()){const x=new Date(d);const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);x.setHours(0,0,0,0);return x;}
+function weekKeyOf(dateStr){return todayKey(weekStart(new Date(dateStr+"T00:00:00")));}
+function doneThisWeek(h){const wk=todayKey(weekStart());return Object.keys(h.done||{}).some(k=>weekKeyOf(k)===wk);}
+function weeklyCount(h){const wk=todayKey(weekStart());return Object.keys(h.done||{}).filter(k=>weekKeyOf(k)===wk).length;}
+function habitDone(h){return h.freq==="weekly"?doneThisWeek(h):!!h.done[todayKey()];}
+const STATICON={disc:"🎯",force:"💪",clar:"🧠",vis:"🧭"};
 
 /* ---------- nav ---------- */
 document.getElementById("tabs").addEventListener("click",e=>{
@@ -557,10 +579,12 @@ function addHabit(){
   const i=document.getElementById("newHabit");
   const n=document.getElementById("newHabitNote");
   const name=i.value.trim();if(!name)return;
-  DB.habits.push({id:uid(),name,note:n.value.trim(),emoji:newHabitEmoji,created:todayKey(),done:{}});
+  const freq=document.getElementById("newHabitFreq").value;
+  const stat=document.getElementById("newHabitStat").value;
+  DB.habits.push({id:uid(),name,note:n.value.trim(),emoji:newHabitEmoji,freq,stat,created:todayKey(),done:{}});
   i.value="";n.value="";newHabitEmoji="";
   const b=document.getElementById("newEmojiBtn");if(b){b.textContent="＋";b.classList.add("empty");}
-  save();renderHabits();renderHome();toast("Habitude ajoutée");
+  save();renderHabits();renderHome();toast(freq==="weekly"?"Habitude hebdo ajoutée":"Habitude ajoutée");
 }
 
 /* ---- sélecteur d'emoji ---- */
@@ -594,6 +618,15 @@ function pickEmoji(e){
 function adherence(h){
   const keys=Object.keys(h.done||{});
   const created=h.created||(keys.length?keys.sort()[0]:todayKey());
+  if(h.freq==="weekly"){
+    const dw=new Set(keys.map(weekKeyOf));
+    const startW=weekStart(new Date(created+"T00:00:00"));
+    let win=Math.floor((weekStart()-startW)/(7*86400000))+1;
+    if(win<1)win=1;if(win>8)win=8;
+    let done=0;const ws=weekStart();
+    for(let i=0;i<win;i++){if(dw.has(todayKey(ws)))done++;ws.setDate(ws.getDate()-7);}
+    return done/win;
+  }
   const start=new Date(created+"T00:00:00");
   const today=new Date(todayKey()+"T00:00:00");
   let win=Math.floor((today-start)/86400000)+1;
@@ -605,20 +638,36 @@ function adherence(h){
 function adhColor(r){return `hsl(${Math.round(r*120)} 68% 45%)`;}
 function toggleHabit(id,dayKey){
   const h=DB.habits.find(x=>x.id===id);if(!h)return;
-  if(h.done[dayKey])delete h.done[dayKey];else h.done[dayKey]=true;
+  if(h.freq==="weekly"){
+    const wk=todayKey(weekStart());
+    if(doneThisWeek(h)){Object.keys(h.done).forEach(k=>{if(weekKeyOf(k)===wk)delete h.done[k];});}
+    else{h.done[todayKey()]=true;}
+  }else{
+    dayKey=dayKey||todayKey();
+    if(h.done[dayKey])delete h.done[dayKey];else h.done[dayKey]=true;
+  }
   save();renderHabits();renderHome();
 }
 function delHabit(id){
   if(!confirm("Supprimer cette habitude ?"))return;
   DB.habits=DB.habits.filter(x=>x.id!==id);save();renderHabits();renderHome();
 }
-function streakOf(h){
+function streakOf(h){return h.freq==="weekly"?weekStreak(h):dailyStreak(h);}
+function dailyStreak(h){
   let s=0;const d=new Date();
   // si pas fait aujourd'hui, on compte à partir d'hier
   if(!h.done[todayKey(d)])d.setDate(d.getDate()-1);
   while(h.done[todayKey(d)]){s++;d.setDate(d.getDate()-1);}
   return s;
 }
+function weekStreak(h){
+  const dw=new Set(Object.keys(h.done||{}).map(weekKeyOf));
+  let s=0;const ws=weekStart();
+  if(!dw.has(todayKey(ws)))ws.setDate(ws.getDate()-7);
+  while(dw.has(todayKey(ws))){s++;ws.setDate(ws.getDate()-7);}
+  return s;
+}
+function streakUnit(h){return h.freq==="weekly"?"sem":"j";}
 function last7(h){
   const out=[];const d=new Date();d.setDate(d.getDate()-6);
   for(let i=0;i<7;i++){out.push(!!h.done[todayKey(d)]);d.setDate(d.getDate()+1);}
@@ -627,20 +676,23 @@ function last7(h){
 function renderHabits(){
   const el=document.getElementById("habitList");
   if(!DB.habits.length){el.innerHTML='<div class="empty">Aucune habitude pour l\'instant.<br>Ajoute ta première en dessous 👇</div>';return;}
-  const tk=todayKey();
   el.innerHTML=DB.habits.map(h=>{
-    const done=!!h.done[tk];const st=streakOf(h);
-    const dots=last7(h).map(o=>`<span class="${o?'on':''}"></span>`).join("");
+    const done=habitDone(h);const st=streakOf(h);const unit=streakUnit(h);
     const r=adherence(h);const pc=Math.round(r*100);
     const emo=h.emoji?`<button class="hemoji" onclick="openEmoji('${h.id}')">${h.emoji}</button>`:`<button class="hemoji empty" onclick="openEmoji('${h.id}')">＋</button>`;
+    const sicon=STATICON[h.stat||"disc"];
+    const freqTag=h.freq==="weekly"?'<span class="htag">hebdo</span>':'';
+    const subRight=h.freq==="weekly"
+      ?`<span class="weekdots-w">${weeklyCount(h)}× cette semaine</span>`
+      :`<span class="weekdots">${last7(h).map(o=>`<span class="${o?'on':''}"></span>`).join("")}</span>`;
     return `<div class="habit">
-      <div class="check ${done?'done':''}" onclick="toggleHabit('${h.id}','${tk}')">${done?'✓':''}</div>
+      <div class="check ${done?'done':''}" onclick="toggleHabit('${h.id}')">${done?'✓':''}</div>
       <div class="name">
-        <span class="hname">${emo}${esc(h.name)}</span>
+        <span class="hname">${emo}${esc(h.name)} <span class="htag stat" title="Nourrit cette stat">${sicon}</span>${freqTag}</span>
         ${h.note?`<small>${esc(h.note)}</small>`:''}
-        <div class="hsub"><span class="streak ${st?'':'zero'}">${st?'🔥 '+st+'j':'—'}</span><span class="weekdots">${dots}</span></div>
+        <div class="hsub"><span class="streak ${st?'':'zero'}">${st?'🔥 '+st+' '+unit:'—'}</span>${subRight}</div>
       </div>
-      <div class="adh" style="background:${adhColor(r)}" title="Régularité moyenne (30j)">${pc}%</div>
+      <div class="adh" style="background:${adhColor(r)}" title="Régularité moyenne">${pc}%</div>
       <button class="iconbtn" onclick="delHabit('${h.id}')">✕</button>
     </div>`;
   }).join("");
@@ -819,15 +871,15 @@ function renderHome(){
   if(!DB.habits.length){
     hh.innerHTML='<div class="empty">Commence par créer quelques habitudes 👉<br><button class="btn ghost sm" style="margin-top:10px" onclick="go(\'habits\')">Mes habitudes</button></div>';
   }else{
-    const tk=todayKey();const doneN=DB.habits.filter(h=>h.done[tk]).length;
+    const doneN=DB.habits.filter(habitDone).length;
     const pct=Math.round(doneN/DB.habits.length*100);
     hh.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <strong>Habitudes du jour</strong><div class="ring" style="background:conic-gradient(var(--accent) ${pct}%, #eef1f8 0)"><span>${doneN}/${DB.habits.length}</span></div></div>`+
-      DB.habits.map(h=>{const done=!!h.done[tk];return `<div class="habit">
-        <div class="check ${done?'done':''}" onclick="toggleHabit('${h.id}','${tk}')">${done?'✓':''}</div>
-        <div class="name">${h.emoji?h.emoji+' ':''}${esc(h.name)}</div>
+      DB.habits.map(h=>{const done=habitDone(h);const wk=h.freq==="weekly"?'<span class="htag">hebdo</span>':'';return `<div class="habit">
+        <div class="check ${done?'done':''}" onclick="toggleHabit('${h.id}')">${done?'✓':''}</div>
+        <div class="name">${h.emoji?h.emoji+' ':''}${esc(h.name)} ${wk}</div>
         <span class="adh-dot" style="background:${adhColor(adherence(h))}" title="Régularité ${Math.round(adherence(h)*100)}%"></span>
-        <div class="streak ${streakOf(h)?'':'zero'}">${streakOf(h)?'🔥 '+streakOf(h):'—'}</div></div>`;}).join("");
+        <div class="streak ${streakOf(h)?'':'zero'}">${streakOf(h)?'🔥 '+streakOf(h)+(h.freq==="weekly"?' sem':''):'—'}</div></div>`;}).join("");
   }
   // focus : objectifs ouverts
   const hf=document.getElementById("homeFocus");
@@ -881,16 +933,34 @@ function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
    ============================================================ */
 // XP cumulés par stat à partir des données
 function statsXP(){
-  let force=0,disc=0,clar=0,vis=0;
-  // Discipline : +2 par habitude cochée (toutes dates)
-  DB.habits.forEach(h=>{disc+=Object.keys(h.done||{}).length*2;});
+  const acc={force:0,disc:0,clar:0,vis:0};
+  // chaque coche d'habitude nourrit la stat choisie (Discipline par défaut)
+  DB.habits.forEach(h=>{const s=acc[h.stat]!==undefined?h.stat:"disc";acc[s]+=Object.keys(h.done||{}).length*2;});
   // Force : +6 par séance + 1 par exercice
-  DB.sessions.forEach(s=>{force+=6+(s.ex?s.ex.length:0);});
+  DB.sessions.forEach(s=>{acc.force+=6+(s.ex?s.ex.length:0);});
   // Clarté : +4 par entrée de journal
-  clar+=DB.entries.length*4;
+  acc.clar+=DB.entries.length*4;
   // Vision : +3 par objectif créé, +12 si résolu
-  DB.goals.forEach(g=>{vis+=3+(g.done?12:0);});
-  return {force,disc,clar,vis};
+  DB.goals.forEach(g=>{acc.vis+=3+(g.done?12:0);});
+  // Santé (saisie du jour) -> nourrit les stats, cumulé sur tous les jours
+  const hx=healthStatXP();
+  acc.force+=hx.force;acc.disc+=hx.disc;acc.clar+=hx.clar;acc.vis+=hx.vis;
+  return acc;
+}
+// contributions de la Santé aux stats (cumulé sur tous les jours saisis)
+function healthStatXP(){
+  const a={force:0,disc:0,clar:0,vis:0};
+  Object.values((typeof HEALTH!=="undefined"&&HEALTH)||{}).forEach(day=>{
+    if(!day)return;
+    const steps=Number(day.steps);if(!isNaN(steps))a.force+=steps/1000;       // +1 / 1000 pas
+    const wc=Number(day.workoutCount);if(!isNaN(wc))a.force+=wc*6;             // +6 / séance
+    const cal=Number(day.activeCalories);if(!isNaN(cal))a.force+=cal/100;      // +1 / 100 cal
+    const hr=Number(day.restingHR);if(!isNaN(hr)&&hr>0&&hr<60)a.force+=2;      // bonne FC repos
+    const sl=Number(day.sleepHours);if(!isNaN(sl))a.clar+=sl>=7?5:(sl>=6?3:1); // sommeil -> clarté
+    const sm=Number(day.screenMinutes);if(!isNaN(sm))a.disc+=sm<=90?5:(sm<=120?3:(sm<=180?1:0)); // peu d'écran -> discipline
+  });
+  a.force=Math.round(a.force);a.disc=Math.round(a.disc);a.clar=Math.round(a.clar);
+  return a;
 }
 // niveau à partir des XP (courbe douce et gratifiante)
 function levelFromXP(xp){
@@ -926,7 +996,7 @@ function momentumLabel(m){
 /* ---- Score d'Homme Productif (du jour) ---- */
 function dayScore(){
   const tk=todayKey();let s=0;
-  if(DB.habits.length)s+=Math.round(DB.habits.filter(h=>h.done[tk]).length/DB.habits.length*40);
+  if(DB.habits.length)s+=Math.round(DB.habits.filter(habitDone).length/DB.habits.length*40);
   if(DB.sessions.some(x=>x.date===tk))s+=25;
   if(DB.entries.some(x=>x.date===tk))s+=20;
   if(DB.goals.some(g=>g.created===tk||g.doneDate===tk))s+=15;
@@ -1061,11 +1131,17 @@ function setHealth(field,val,isFloat){
 
 /* ---- Import par capture d'écran (Gemini Vision) ---- */
 const GEMINI_MODEL="gemini-2.5-flash";
-function geminiKey(){return localStorage.getItem("me-gemini-key")||"";}
+function geminiKey(){
+  if(DB.settings&&DB.settings.geminiKey)return DB.settings.geminiKey;
+  return localStorage.getItem("me-gemini-key")||"";
+}
 function saveGeminiKey(){
   const el=document.getElementById("geminiKey");const v=(el?el.value:"").trim();
-  if(v)localStorage.setItem("me-gemini-key",v);else localStorage.removeItem("me-gemini-key");
-  renderGeminiStatus();toast(v?"Clé IA enregistrée ✅":"Clé retirée");
+  DB.settings=DB.settings||{};
+  if(v){DB.settings.geminiKey=v;localStorage.setItem("me-gemini-key",v);}
+  else{delete DB.settings.geminiKey;localStorage.removeItem("me-gemini-key");}
+  save(); // persiste en local ET dans Firebase (synchro tous appareils)
+  renderGeminiStatus();toast(v?"Clé IA enregistrée ✅ (synchronisée)":"Clé retirée");
 }
 function renderGeminiStatus(){
   const s=document.getElementById("geminiStatus");if(!s)return;
@@ -1125,7 +1201,7 @@ function applyHealthFromAI(obj){
   toast(n?`${n} valeur${n>1?'s':''} importée${n>1?'s':''} ✅`:"Rien trouvé sur la capture 🤔");
 }
 
-function renderAll(){renderHome();renderHabits();renderSessions();renderGoals();renderEntries();renderHealth();}
+function renderAll(){renderHome();renderHabits();renderSessions();renderGoals();renderEntries();renderHealth();renderGeminiStatus();}
 
 /* ============================================================
    SYNCHRO CLOUD (Firebase Auth + Firestore, temps réel)
@@ -1227,7 +1303,7 @@ function pushNow(){
     .then(()=>setCloudDot("on","Synchronisé"))
     .catch(e=>{console.error(e);setCloudDot("err","Erreur sync");});
 }
-function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[]};}
+function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[],settings:d.settings||{}};}
 
 /* ---- auth actions ---- */
 function authErr(e){
