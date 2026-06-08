@@ -3,8 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#faf9f6">
+<meta name="theme-color" content="#2563eb">
 <title>Mon Espace</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzNiODJmNiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM2MzY2ZjEiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMTE2IiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMTM4IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS1vcGFjaXR5PSIwLjI4IiBzdHJva2Utd2lkdGg9IjM0Ii8+CiAgPHBhdGggZD0iTTI1NiAxMTggYTEzOCAxMzggMCAwIDEgMTM4IDEzOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjM0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8cGF0aCBkPSJNMTk4IDI2MiBsNDAgNDIgbDc4IC05MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjQwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mon Espace">
+<link id="manifestLink" rel="manifest">
 <style>
   :root{
     --bg:#f4f7fc;
@@ -224,15 +230,51 @@
   /* notifs */
   .notif-time{display:flex;align-items:center;gap:10px;margin-top:10px}
   .notif-time input[type=time]{max-width:130px}
+
+  /* emoji + régularité des habitudes */
+  .emoji-btn{flex:none!important;width:48px;border:1px solid var(--line);background:#fff;border-radius:12px;font-size:20px;cursor:pointer;display:grid;place-items:center}
+  .emoji-btn.empty{color:var(--muted)}
+  .hname{display:flex;align-items:center;gap:7px;font-weight:500}
+  .hemoji{border:none;background:none;cursor:pointer;font-size:18px;padding:0;line-height:1}
+  .hemoji.empty{width:22px;height:22px;border-radius:50%;border:1.5px dashed var(--line);color:var(--muted);font-size:13px;display:grid;place-items:center}
+  .hsub{display:flex;align-items:center;gap:10px;margin-top:4px}
+  .adh{font-size:12px;font-weight:800;padding:4px 10px;border-radius:20px;color:#fff;white-space:nowrap;flex:none;box-shadow:0 3px 8px rgba(0,0,0,.12)}
+  .adh-dot{width:11px;height:11px;border-radius:50%;flex:none}
+  .emoji-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:flex-end;justify-content:center;z-index:200;animation:fade .2s ease}
+  .emoji-overlay.show{display:flex}
+  .emoji-panel{background:var(--card);border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));width:100%;max-width:720px;box-shadow:0 -10px 30px rgba(0,0,0,.18);animation:rise .25s ease both}
+  .emoji-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .emoji-grid button{font-size:24px;background:#f4f6fb;border:2px solid transparent;border-radius:14px;padding:10px 0;cursor:pointer;transition:transform .08s,border-color .12s}
+  .emoji-grid button:active{transform:scale(.9)}
+  .emoji-grid button.sel{border-color:var(--accent);background:var(--accent-soft)}
+
+  /* santé */
+  .health-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .hcell{background:#f5f7fc;border-radius:14px;padding:12px}
+  .hcell .hl{font-size:12px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:5px}
+  .hcell .hv{font-size:21px;font-weight:800;margin-top:3px;letter-spacing:-.01em}
+  .hcell .hv small{font-size:12px;font-weight:600;color:var(--muted)}
+  .hcell .hinput{margin-top:5px;width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:18px;font-weight:800;background:#fff;text-align:left}
+  .health-hint{color:var(--muted);font-size:13px;line-height:1.5}
+  .health-date{font-size:12px;color:var(--muted);margin-top:10px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-      <div>
-        <h1 id="hello">Bonjour</h1>
-        <div class="date" id="todayLabel"></div>
+      <div style="display:flex;align-items:center;gap:11px">
+        <svg width="34" height="34" viewBox="0 0 512 512" style="flex:none;border-radius:10px;box-shadow:0 4px 12px rgba(37,99,235,.3)" aria-hidden="true">
+          <defs><linearGradient id="hg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+          <rect width="512" height="512" rx="116" fill="url(#hg)"/>
+          <circle cx="256" cy="256" r="138" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="34"/>
+          <path d="M256 118 a138 138 0 0 1 138 138" fill="none" stroke="#fff" stroke-width="34" stroke-linecap="round"/>
+          <path d="M198 262 l40 42 l78 -92" fill="none" stroke="#fff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div>
+          <h1 id="hello">Bonjour</h1>
+          <div class="date" id="todayLabel"></div>
+        </div>
       </div>
       <button id="cloudDot" class="clouddot off" onclick="go('settings')" title="Synchro">☁ <span id="cloudDotTxt">Hors-ligne</span></button>
     </div>
@@ -245,6 +287,9 @@
     <div class="dash-card" id="homeMomentum"></div>
     <h2 class="section-title">Tes stats de vie</h2>
     <div class="dash-card" id="homeStats"></div>
+    <h2 class="section-title">Santé · saisie du jour</h2>
+    <div class="dash-card" id="homeHealth"></div>
+    <input type="file" id="shotInput" accept="image/*" style="display:none" onchange="onShot(event)">
     <h2 class="section-title">Aujourd'hui</h2>
     <div class="card" id="homeHabits"></div>
     <div class="card" id="homeFocus"></div>
@@ -257,6 +302,7 @@
     <div class="card">
       <label class="fld">Nouvelle habitude</label>
       <div class="row">
+        <button type="button" id="newEmojiBtn" class="emoji-btn empty" onclick="openEmoji(null)" title="Choisir un emoji">＋</button>
         <input id="newHabit" placeholder="ex. Boire 2L d'eau" maxlength="60">
         <button class="btn" style="flex:none" onclick="addHabit()">Ajouter</button>
       </div>
@@ -289,6 +335,26 @@
       <label class="fld">Quelque chose à résoudre, un objectif, une question</label>
       <input id="newGoal" placeholder="ex. Trouver une routine de sommeil stable" maxlength="120">
       <input id="newGoalNote" placeholder="détail / pourquoi (facultatif)" maxlength="160" style="margin-top:8px">
+      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;font-weight:600;cursor:pointer">
+        <input type="checkbox" id="goalAuto" onchange="toggleAutoFields()" style="width:auto"> 🤖 Objectif automatique (basé sur tes données)
+      </label>
+      <div id="autoFields" style="display:none;margin-top:10px">
+        <div class="row">
+          <select id="goalMetric">
+            <option value="steps">👟 Pas</option>
+            <option value="sleepHours">😴 Sommeil (h)</option>
+            <option value="workoutCount">🏋️ Séances</option>
+            <option value="activeCalories">🔥 Calories actives</option>
+            <option value="screenMinutes">📱 Temps d'écran (min)</option>
+          </select>
+          <select id="goalOp" style="max-width:120px">
+            <option value=">=">au moins</option>
+            <option value="<=">au plus</option>
+          </select>
+          <input id="goalTarget" type="number" inputmode="numeric" placeholder="cible" style="max-width:90px">
+        </div>
+        <p class="dim" style="margin-top:6px">Se coche tout seul quand ta donnée du jour atteint la cible. (Tu saisis tes chiffres dans la carte « Santé · saisie du jour ».)</p>
+      </div>
       <button class="btn full" style="margin-top:10px" onclick="addGoal()">Ajouter</button>
     </div>
     <div class="card" id="goalList"></div>
@@ -352,6 +418,15 @@
       </div>
     </div>
 
+    <h2 class="section-title">Import par capture (IA)</h2>
+    <div class="card">
+      <strong>Clé Gemini (Google)</strong>
+      <p class="dim" style="margin-top:4px">Pour que l'IA lise tes captures d'écran (Temps d'écran, Santé…) et remplisse les champs toute seule. Gratuit. Crée ta clé sur <span style="color:var(--accent)">aistudio.google.com/apikey</span> et colle-la ici. Pense à la restreindre à ton site (voir le guide).</p>
+      <input id="geminiKey" type="password" placeholder="Colle ta clé Gemini ici" autocomplete="off">
+      <button class="btn full" style="margin-top:8px" onclick="saveGeminiKey()">Enregistrer la clé</button>
+      <div id="geminiStatus" class="dim" style="margin-top:8px"></div>
+    </div>
+
     <h2 class="section-title">Coach &amp; rappels</h2>
     <div class="card">
       <strong>Mode spam 😈</strong>
@@ -395,6 +470,17 @@
       <button class="btn subtle full" onclick="resetAll()" style="color:var(--warn)">Tout réinitialiser (cet appareil)</button>
     </div>
   </section>
+</div>
+
+<div class="emoji-overlay" id="emojiOverlay" onclick="closeEmoji(event)">
+  <div class="emoji-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <strong>Choisis un emoji</strong>
+      <button class="iconbtn" onclick="closeEmoji()" style="font-size:20px">✕</button>
+    </div>
+    <div class="emoji-grid" id="emojiGrid"></div>
+    <button class="btn ghost full" style="margin-top:12px" onclick="pickEmoji('')">Aucun emoji</button>
+  </div>
 </div>
 
 <nav class="tabs" id="tabs">
@@ -466,13 +552,57 @@ function toast(msg){
 }
 
 /* ---------- HABITUDES ---------- */
+let newHabitEmoji="";
 function addHabit(){
   const i=document.getElementById("newHabit");
   const n=document.getElementById("newHabitNote");
   const name=i.value.trim();if(!name)return;
-  DB.habits.push({id:uid(),name,note:n.value.trim(),done:{}});
-  i.value="";n.value="";save();renderHabits();renderHome();toast("Habitude ajoutée");
+  DB.habits.push({id:uid(),name,note:n.value.trim(),emoji:newHabitEmoji,created:todayKey(),done:{}});
+  i.value="";n.value="";newHabitEmoji="";
+  const b=document.getElementById("newEmojiBtn");if(b){b.textContent="＋";b.classList.add("empty");}
+  save();renderHabits();renderHome();toast("Habitude ajoutée");
 }
+
+/* ---- sélecteur d'emoji ---- */
+const EMOJIS=["💧","🏃","🏋️","📚","🧘","🥗","😴","💊","✍️","🚭","🧹","💰","🎯","🙏","🚶","☀️","🛏️","🦷","📵","🧠","🎸","🎨","💻","🌱","🚴","⏰","🍎","🥤","🤸","📅"];
+let emojiTarget=null; // null = nouvelle habitude, sinon id d'habitude
+function openEmoji(target){
+  emojiTarget=target;
+  const grid=document.getElementById("emojiGrid");
+  let cur="";
+  if(target){const h=DB.habits.find(x=>x.id===target);cur=h?h.emoji||"":"";}else{cur=newHabitEmoji;}
+  grid.innerHTML=EMOJIS.map(e=>`<button class="${e===cur?'sel':''}" onclick="pickEmoji('${e}')">${e}</button>`).join("");
+  document.getElementById("emojiOverlay").classList.add("show");
+}
+function closeEmoji(ev){
+  if(ev&&ev.target&&ev.target.closest&&ev.target.closest(".emoji-panel"))return;
+  document.getElementById("emojiOverlay").classList.remove("show");
+}
+function pickEmoji(e){
+  if(emojiTarget){
+    const h=DB.habits.find(x=>x.id===emojiTarget);
+    if(h){h.emoji=e;save();renderHabits();renderHome();}
+  }else{
+    newHabitEmoji=e;
+    const b=document.getElementById("newEmojiBtn");
+    if(b){b.textContent=e||"＋";b.classList.toggle("empty",!e);}
+  }
+  document.getElementById("emojiOverlay").classList.remove("show");
+}
+
+/* ---- régularité moyenne (couleur rouge→orange→vert) ---- */
+function adherence(h){
+  const keys=Object.keys(h.done||{});
+  const created=h.created||(keys.length?keys.sort()[0]:todayKey());
+  const start=new Date(created+"T00:00:00");
+  const today=new Date(todayKey()+"T00:00:00");
+  let win=Math.floor((today-start)/86400000)+1;
+  if(win<1)win=1;if(win>30)win=30;
+  let done=0;const d=new Date(today);
+  for(let i=0;i<win;i++){if(h.done[todayKey(d)])done++;d.setDate(d.getDate()-1);}
+  return done/win;
+}
+function adhColor(r){return `hsl(${Math.round(r*120)} 68% 45%)`;}
 function toggleHabit(id,dayKey){
   const h=DB.habits.find(x=>x.id===id);if(!h)return;
   if(h.done[dayKey])delete h.done[dayKey];else h.done[dayKey]=true;
@@ -501,10 +631,16 @@ function renderHabits(){
   el.innerHTML=DB.habits.map(h=>{
     const done=!!h.done[tk];const st=streakOf(h);
     const dots=last7(h).map(o=>`<span class="${o?'on':''}"></span>`).join("");
+    const r=adherence(h);const pc=Math.round(r*100);
+    const emo=h.emoji?`<button class="hemoji" onclick="openEmoji('${h.id}')">${h.emoji}</button>`:`<button class="hemoji empty" onclick="openEmoji('${h.id}')">＋</button>`;
     return `<div class="habit">
       <div class="check ${done?'done':''}" onclick="toggleHabit('${h.id}','${tk}')">${done?'✓':''}</div>
-      <div class="name">${esc(h.name)}${h.note?`<small>${esc(h.note)}</small>`:''}<div class="weekdots">${dots}</div></div>
-      <div class="streak ${st?'':'zero'}">${st?'🔥 '+st+'j':'—'}</div>
+      <div class="name">
+        <span class="hname">${emo}${esc(h.name)}</span>
+        ${h.note?`<small>${esc(h.note)}</small>`:''}
+        <div class="hsub"><span class="streak ${st?'':'zero'}">${st?'🔥 '+st+'j':'—'}</span><span class="weekdots">${dots}</span></div>
+      </div>
+      <div class="adh" style="background:${adhColor(r)}" title="Régularité moyenne (30j)">${pc}%</div>
       <button class="iconbtn" onclick="delHabit('${h.id}')">✕</button>
     </div>`;
   }).join("");
@@ -569,14 +705,52 @@ function renderSessions(){
 }
 
 /* ---------- OBJECTIFS ---------- */
+function toggleAutoFields(){
+  const on=document.getElementById("goalAuto").checked;
+  document.getElementById("autoFields").style.display=on?"block":"none";
+}
+function metricLabel(m){return {steps:"Pas",sleepHours:"Sommeil (h)",workoutCount:"Séances",activeCalories:"Calories actives",screenMinutes:"Temps d'écran (min)"}[m]||m;}
+function autoLabel(a){return `${metricLabel(a.metric)} ${a.op===">="?"≥":"≤"} ${a.target}`;}
+function metricValue(m){
+  const h=HEALTH[todayKey()]||{};
+  const v=num(h[m]);
+  return v;
+}
+function evalAutoGoals(){
+  let changed=false;
+  DB.goals.forEach(g=>{
+    if(!g.auto)return;
+    const v=metricValue(g.auto.metric);
+    if(v===null||v===undefined||isNaN(v))return; // pas de donnée -> on ne touche pas
+    const reached=g.auto.op===">="?v>=g.auto.target:v<=g.auto.target;
+    if(reached!==g.done){g.done=reached;if(reached)g.doneDate=todayKey();else delete g.doneDate;changed=true;}
+  });
+  if(changed)save();
+  return changed;
+}
 function addGoal(){
   const i=document.getElementById("newGoal");const n=document.getElementById("newGoalNote");
-  const t=i.value.trim();if(!t)return;
-  DB.goals.unshift({id:uid(),text:t,note:n.value.trim(),done:false,created:todayKey()});
-  i.value="";n.value="";save();renderGoals();renderHome();toast("Ajouté à ta liste");
+  let t=i.value.trim();
+  const auto=document.getElementById("goalAuto").checked;
+  let autoObj=null;
+  if(auto){
+    const target=parseFloat(document.getElementById("goalTarget").value);
+    if(isNaN(target)){toast("Indique une valeur cible");return;}
+    autoObj={metric:document.getElementById("goalMetric").value,op:document.getElementById("goalOp").value,target};
+    if(!t)t=autoLabel(autoObj);
+  }
+  if(!t)return;
+  const g={id:uid(),text:t,note:n.value.trim(),done:false,created:todayKey()};
+  if(autoObj)g.auto=autoObj;
+  DB.goals.unshift(g);
+  i.value="";n.value="";
+  document.getElementById("goalAuto").checked=false;document.getElementById("goalTarget").value="";toggleAutoFields();
+  evalAutoGoals();save();renderGoals();renderHome();toast("Ajouté à ta liste");
 }
 function toggleGoal(id){
-  const g=DB.goals.find(x=>x.id===id);if(!g)return;g.done=!g.done;
+  const g=DB.goals.find(x=>x.id===id);if(!g)return;
+  if(g.auto){toast("Objectif automatique 🤖 — se coche tout seul");return;}
+  g.done=!g.done;
   if(g.done)g.doneDate=todayKey();else delete g.doneDate;
   save();renderGoals();renderHome();
 }
@@ -584,13 +758,23 @@ function delGoal(id){
   DB.goals=DB.goals.filter(x=>x.id!==id);save();renderGoals();renderHome();
 }
 function renderGoals(){
+  evalAutoGoals();
   const el=document.getElementById("goalList");
   if(!DB.goals.length){el.innerHTML='<div class="empty">Aucun objectif pour l\'instant.<br>Note ce que tu veux résoudre ou atteindre.</div>';return;}
   const open=DB.goals.filter(g=>!g.done),done=DB.goals.filter(g=>g.done);
-  const render=g=>`<div class="goal ${g.done?'done':''}">
-    <div class="check ${g.done?'done':''}" onclick="toggleGoal('${g.id}')">${g.done?'✓':''}</div>
-    <div class="gtext">${esc(g.text)}${g.note?`<small>${esc(g.note)}</small>`:''}</div>
-    <button class="iconbtn" onclick="delGoal('${g.id}')">✕</button></div>`;
+  const render=g=>{
+    let sub="";
+    if(g.auto){
+      const v=metricValue(g.auto.metric);
+      const cur=(v===null||v===undefined||isNaN(v))?"—":(g.auto.metric==="sleepHours"?(+v).toFixed(1):v.toLocaleString("fr-FR"));
+      sub=`<small>🤖 ${autoLabel(g.auto)} · ${cur} aujourd'hui</small>`;
+    }else if(g.note){sub=`<small>${esc(g.note)}</small>`;}
+    const click=g.auto?`onclick="toggleGoal('${g.id}')"`:`onclick="toggleGoal('${g.id}')"`;
+    return `<div class="goal ${g.done?'done':''}">
+      <div class="check ${g.done?'done':''}" ${click}>${g.done?'✓':''}</div>
+      <div class="gtext">${esc(g.text)}${sub}</div>
+      <button class="iconbtn" onclick="delGoal('${g.id}')">✕</button></div>`;
+  };
   el.innerHTML=open.map(render).join("")+
     (done.length?`<hr class="sep"><div class="dim" style="margin-bottom:4px">Résolus (${done.length})</div>`+done.map(render).join(""):"");
 }
@@ -626,6 +810,7 @@ function renderEntries(){
 
 /* ---------- ACCUEIL ---------- */
 function renderHome(){
+  evalAutoGoals();
   document.getElementById("hello").textContent=greeting();
   document.getElementById("todayLabel").textContent=cap(frDate(todayKey()));
   renderGameHome();
@@ -640,7 +825,8 @@ function renderHome(){
         <strong>Habitudes du jour</strong><div class="ring" style="background:conic-gradient(var(--accent) ${pct}%, #eef1f8 0)"><span>${doneN}/${DB.habits.length}</span></div></div>`+
       DB.habits.map(h=>{const done=!!h.done[tk];return `<div class="habit">
         <div class="check ${done?'done':''}" onclick="toggleHabit('${h.id}','${tk}')">${done?'✓':''}</div>
-        <div class="name">${esc(h.name)}</div>
+        <div class="name">${h.emoji?h.emoji+' ':''}${esc(h.name)}</div>
+        <span class="adh-dot" style="background:${adhColor(adherence(h))}" title="Régularité ${Math.round(adherence(h)*100)}%"></span>
         <div class="streak ${streakOf(h)?'':'zero'}">${streakOf(h)?'🔥 '+streakOf(h):'—'}</div></div>`;}).join("");
   }
   // focus : objectifs ouverts
@@ -840,14 +1026,109 @@ function renderGameHome(){
   setTimeout(()=>{document.querySelectorAll("#homeStats .bar").forEach(b=>b.style.width=b.dataset.w+"%");},60);
 }
 
-function renderAll(){renderHome();renderHabits();renderSessions();renderGoals();renderEntries();}
+/* ---- Santé (Apple Watch via Raccourci) ---- */
+function num(v){return (v===undefined||v===null||v==="")?null:Number(v);}
+const HFIELDS=[
+  {k:"steps",ic:"👟",l:"Pas",fl:false},
+  {k:"sleepHours",ic:"😴",l:"Sommeil (h)",fl:true},
+  {k:"workoutCount",ic:"🏋️",l:"Séances",fl:false},
+  {k:"restingHR",ic:"❤️",l:"FC repos",fl:false},
+  {k:"activeCalories",ic:"🔥",l:"Calories",fl:false},
+  {k:"screenMinutes",ic:"📱",l:"Écran (min)",fl:false}
+];
+function healthVal(f){const h=HEALTH[todayKey()]||{};const v=num(h[f]);return (v===null||v===undefined||isNaN(v))?"":v;}
+function renderHealth(){
+  const el=document.getElementById("homeHealth");if(!el)return;
+  el.innerHTML=`<div class="health-grid">`+
+    HFIELDS.map(x=>`<div class="hcell">
+      <div class="hl">${x.ic} ${x.l}</div>
+      <input class="hinput" type="number" inputmode="${x.fl?'decimal':'numeric'}" placeholder="—" value="${healthVal(x.k)}" onchange="setHealth('${x.k}',this.value,${x.fl})">
+    </div>`).join("")+
+    `</div>
+    <button class="btn full" style="margin-top:12px" onclick="pickHealthShot()">📷 Importer depuis une capture (IA)</button>
+    <div class="health-hint" style="margin-top:10px">Saisis tes chiffres à la main, ou prends une capture (Temps d'écran, Santé…) et laisse l'IA les remplir. Synchro entre tes appareils incluse.</div>`;
+}
+function setHealth(field,val,isFloat){
+  const tk=todayKey();HEALTH[tk]=HEALTH[tk]||{};
+  const raw=(val+"").trim().replace(",",".");
+  let v=isFloat?parseFloat(raw):parseInt(raw,10);
+  const empty=(raw===""||isNaN(v));
+  if(empty)delete HEALTH[tk][field];else HEALTH[tk][field]=v;
+  localStorage.setItem("me-health",JSON.stringify(HEALTH));
+  if(cloud.uid){try{firebase.firestore().collection("health").doc(cloud.uid).collection("days").doc(tk).set({[field]:empty?null:v},{merge:true});}catch(e){}}
+  evalAutoGoals();renderGoals();renderHome();renderHealth();
+}
+
+/* ---- Import par capture d'écran (Gemini Vision) ---- */
+const GEMINI_MODEL="gemini-2.0-flash";
+function geminiKey(){return localStorage.getItem("me-gemini-key")||"";}
+function saveGeminiKey(){
+  const el=document.getElementById("geminiKey");const v=(el?el.value:"").trim();
+  if(v)localStorage.setItem("me-gemini-key",v);else localStorage.removeItem("me-gemini-key");
+  renderGeminiStatus();toast(v?"Clé IA enregistrée ✅":"Clé retirée");
+}
+function renderGeminiStatus(){
+  const s=document.getElementById("geminiStatus");if(!s)return;
+  s.textContent=geminiKey()?"✅ Clé configurée — l'import par capture est prêt.":"";
+}
+function pickHealthShot(){
+  if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages ⚙️");go("settings");return;}
+  document.getElementById("shotInput").click();
+}
+function onShot(ev){const f=ev.target.files[0];ev.target.value="";if(f)importHealthShot(f);}
+function resizeImg(file,maxW){
+  return new Promise((res,rej)=>{
+    const img=new Image();const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      let w=img.width,h=img.height;
+      if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+      const c=document.createElement("canvas");c.width=w;c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      try{res(c.toDataURL("image/jpeg",0.85).split(",")[1]);}catch(e){rej(e);}
+    };
+    img.onerror=rej;img.src=url;
+  });
+}
+function importHealthShot(file){
+  toast("Lecture de la capture… 🤖");
+  resizeImg(file,1100).then(callGemini).then(applyHealthFromAI).catch(e=>{console.error(e);toast("Échec de la lecture 😕");});
+}
+function callGemini(b64){
+  const prompt="Tu lis une capture d'écran d'iPhone (Temps d'écran, app Santé, montre, etc.). Extrais uniquement les valeurs présentes et réponds STRICTEMENT en JSON avec ces clés (omets celles absentes) : "+
+    "steps (entier, nombre de pas), sleepHours (nombre décimal, heures de sommeil), workoutCount (entier, nombre de séances/entraînements), restingHR (entier, fréquence cardiaque au repos en bpm), activeCalories (entier, calories actives/dépensées), screenMinutes (entier, temps d'écran TOTAL converti en minutes). "+
+    "Convertis: '2 h 30 min' -> 150 ; '7 h 15' de sommeil -> 7.25 ; '8 245 pas' -> 8245. N'invente rien. Réponds UNIQUEMENT le JSON, sans texte autour.";
+  return fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(geminiKey())}`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({contents:[{parts:[{text:prompt},{inline_data:{mime_type:"image/jpeg",data:b64}}]}],generationConfig:{responseMimeType:"application/json",temperature:0}})
+  }).then(r=>r.json()).then(j=>{
+    if(j.error)throw new Error(j.error.message||"Gemini error");
+    const t=j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts[0].text;
+    if(!t)throw new Error("Réponse vide");
+    return JSON.parse(t);
+  });
+}
+function applyHealthFromAI(obj){
+  const tk=todayKey();HEALTH[tk]=HEALTH[tk]||{};
+  const fields=["steps","sleepHours","workoutCount","restingHR","activeCalories","screenMinutes"];
+  let n=0,patch={};
+  fields.forEach(k=>{const v=Number(obj[k]);if(obj[k]!==undefined&&obj[k]!==null&&!isNaN(v)){HEALTH[tk][k]=v;patch[k]=v;n++;}});
+  localStorage.setItem("me-health",JSON.stringify(HEALTH));
+  if(cloud.uid&&n){try{firebase.firestore().collection("health").doc(cloud.uid).collection("days").doc(tk).set(patch,{merge:true});}catch(e){}}
+  evalAutoGoals();renderHealth();renderGoals();renderHome();
+  toast(n?`${n} valeur${n>1?'s':''} importée${n>1?'s':''} ✅`:"Rien trouvé sur la capture 🤔");
+}
+
+function renderAll(){renderHome();renderHabits();renderSessions();renderGoals();renderEntries();renderHealth();}
 
 /* ============================================================
    SYNCHRO CLOUD (Firebase Auth + Firestore, temps réel)
    ============================================================ */
 const CFG_KEY="me-fbcfg";
-let cloud={ready:false,uid:null,unsub:null,gotFirst:false};
+let cloud={ready:false,uid:null,unsub:null,hunsub:null,gotFirst:false};
 let writeT=null;
+let HEALTH=loadHealth();
+function loadHealth(){try{return JSON.parse(localStorage.getItem("me-health")||"{}");}catch(e){return {};}}
 
 function getCfg(){
   if(BAKED_CONFIG)return BAKED_CONFIG;
@@ -911,9 +1192,19 @@ function onLoggedIn(u){
     }
     cloud.gotFirst=true;
   },err=>{console.error(err);setCloudDot("err","Erreur sync");});
+  // canal santé (écrit par le Raccourci iOS)
+  const href=firebase.firestore().collection("health").doc(u.uid).collection("days");
+  if(cloud.hunsub)cloud.hunsub();
+  cloud.hunsub=href.onSnapshot(qs=>{
+    qs.forEach(doc=>{HEALTH[doc.id]=doc.data();});
+    localStorage.setItem("me-health",JSON.stringify(HEALTH));
+    evalAutoGoals();renderHealth();renderGoals();renderHome();
+  },err=>console.error(err));
 }
 function onLoggedOut(){
-  cloud.uid=null;if(cloud.unsub){cloud.unsub();cloud.unsub=null;}
+  cloud.uid=null;
+  if(cloud.unsub){cloud.unsub();cloud.unsub=null;}
+  if(cloud.hunsub){cloud.hunsub();cloud.hunsub=null;}
   setCloudDot(getCfg()?"off":"off",getCfg()?"Non connecté":"Hors-ligne");
 }
 
@@ -1073,7 +1364,18 @@ function startNotifScheduler(){
   },20000);
 }
 
+/* ---------- manifest (icône appli Android) ---------- */
+function buildManifest(){
+  try{
+    const icon="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAMAAABlApw1AAAARVBMVEUAAABOdPNPc/NOc/NTd/NegPRmhvVwjvWLo/enufm4x/rJ1Pva4vzm6/3u8f3Azvp4lPaCnPb+/v7T3PyUqviuv/mcsfhr8iTEAAAAAXRSTlMAQObYZgAACoJJREFUeNrVXYmy8ioMtjXdF6tV3/9Rj3UlECABeqyZuf/M8Srky0YI227HoSzLs2y/h71KxT4RgfHJ0t+tRxZvDN73AFQvq9JNOkWxjwZxY54W0T9SOIYsfwn+qwBuqshDMJg2/00SQ1jY399tfyskg5BviPMnAeR88W9J8ioxlZB/m884BFm2UfHfCbwQdPZB+XcDBD4lZN/mkOIZ/+n05Q2b/4ccCDZt/m+y+8EG7Ydg325FDP5X1JCgacuYtqL80+POIgBsw09MBHmyCdZ3AGzBgcH6B/Fd3Q0cTW2UNAX8lgEtlG3NgKIQ+ABswKQMFgBYKcQGWLfSRwXcGSR4/n7R2g716vdfPWANVb5U8BNJtAvAt/kwiasuw4K26rIWvopc5ML/yhuLngB+chR70p1/E0BalSRsTZ/g32eXP6yAB4BtB1GP+n5dA3v4lVKKlbL1AABAWZXl/b/1kqOM5QJSjEVVN23XD8N4p2Hou0NTT+UKUsoVDaRRRXFsumE8YbqhuP07zE2dGkR+00BCG6rO3XBy0tg1VVKjTRiEytrH/RPDfGbpgVekEKaiduFVFxb3DxraKZXYEuXSx3bks3+nro6wJOWnSQBMnZT9O4Rjir4TAKjE0n/RIYEhRQOAq8D2DX9uYsIquAHwTHTqwtlfaK6/qgG4hlrPRwkXgRIIoTIA2FVRRor/qYQqlQakcW3q3bIdhrnrunnuB7eehhgzijChs52toVtyt/KWkC45O5TlVDeOYXpswseEYADQ2LiZm6mkGCqnxjpetMEI3ADszRYW/ntnrgbVdaZ/d6B/Bd4PAzUALSn87uiVJEwHUg1d4IgQBoDmn5uhTeTQ3YVZURiAC8WAIC8gtRCGgA1Abf1K2P5Z1C3URAi+iFqQAlDoTFiP2ILLxlRCE8BMAIDJ6DlsJKrNgaFGwlUp1YxsEZ2h/NBcwMxEBnl+vfMANKgwApDcfF5kBrNZ3JahAR8Uw4EvMVPDJro1qQkZDtBwly5p0gPCKHUnaVWi8/EvJV2jvdCIhAB0lXM1DoImZTqUASi1yNeKIp4Fmzasj7JIhAH4+taihjxmUFRoZslIKULrQpoHD1FzwQ/peq0lSnQBMJo54I5k6Y+Djlgws8QIJRrQFCDKvdzUhEtGAgArQBrvVAJtzglzsAoeAFg/qLACgksJcGz7oT+c1U41IxJUTQUawHoOnEDd5PAKOrMaL3F869YAgGOFGq1FUJRkVs09sXpHfnzjA6iRjA4SphWcpWrts7J6ifXbWBsIB9DZFCACgQOBEm4qpOCerVU2gBLpONQDtHipNoO9gC0gD4BPBzjvDVxc0ZPnQQnFeJT52JCntmUDYGT5yIL4GkZUG+vHpbUHbptcE8IxKKR8cJOxMYtXNYDVw45DXABTYJRTZWCWgtCQi2XETSc+ANxW0Vj75RIQqyFX9A30BW69mqsB1HiIBVHlVC2dQjY0aEfwbHiYAAqk3pBBgCjHj1osQ6Mx10yZAFCMGwIsqCaqubqZA3ISZqRmAkB5RMAoNhH8mwUNZGVXXstMAKj4IZ/JVMT6GOGl4l6ADQDJRjyVLIl1JWpF5higZyYAFISEPgxaBkcFoAchL2aO9jwAaMpHxgcoJ3ptck8GILoMjYYyNErHltcdLT9oaodxWWCl5Eqs51gqoFhOvDl3AABTt/BebelNyVIB1BZhVEtlDgRvAE6LQ5MBM5FQZGzYxsQLQCYApqsxNaACMMIDHuVwvxWxmGePL6q3Myd9PACVC4CW5fSq6qkMzlFRRS1ZAQSs1DsB6KVNBQGVwbkqqjwAsRrQfaDSvfQjYiqAunIcFUBSE3I68WQw+RpliQVl9zCORrwPAFeA4QEoXGG0MuNkdy/4HIkA5J5KsMIo7j4AwKBtpgcq0BSWDM7dz2oDGeLRaJnaOnQAMoNz5zeFb8APBoBHGF23lApOLRFAfRX5MjSZ8+8TR/HNSGQm3t5X70YCnE7zRMvUALIS0xGPHAT+NWwUtVrft0UAao9sjowNsP45ItIzs/TBBIBC5UCc6am9CPxTRLzQFD+pt1fNKFv2IWDMEHFZxReEQKQBFKFp7Z6d/HPWxJGdcuvHCAB3RwMdIFwIWGviyAUIH2au0NAoUISzjPJXK/+sxAybKbMsFFhet7Ru243MW5KtxZBNAA4bQgOrpTwNF5p/3qaisCUU9hoZtg9LjKMR8CrlOKllb6RiA8Dt24ZJagrGLLFh+7NbkNbajrtMjWe3tmQdTATMPRXl2susWpS0Zir6NJ67qYix0B0JwL7VwIWAuwuR27oEgK7FlqcCVIseuZVsrIADfwVCsFtl4m6JUbYUc03B1bYbDAWAVfg79fZz5kXzMAj1lJtzwV1zHM4qaMj2e5ROuKVb1s3l6j+P8iL+ljOjSQkATU5jktOoC2lT0l5yh4Bo97o272LWDfyC0eoXos1ssp272lpR8LYzTPp22hW3HuurpUl2XmoOILTMyM3fYdtWEOnzIGY1IhCAUcNSZwZBBqXPpT+OFbBKyfiJUT+J3H9cx7bH18ATnW5EMSdRiROx4lOh4lNM5tEjwbEXfXHKmIPK9zPLj2GZVfPQc5ylMX9jZaEh6wOIzBJWT/fr0cxk1t+5pQg+AJIHonwidwQgDoSHuFPQaVZi6j4Ld4BQ1zkEHesOAkBtPzm1gq2M1ElQqSu5aqP+Y9nUfQzsazrKhlpOmMPusQo8kl6QN0oM7cSoQZPsB5+ICr3VgD6Ufho79+VHRW252OBtP6sPZB4EixrO9MUGUNWtbSkq/ERsxMUYjXVJY+zb61QBvB4jWW7GOLezfQlEcobVqMxRn/Kodi7tjUPfde2NDt3svpuEXXuJ0QCJcJpPCagXDiFhAGgqmnj+ueZvMZLYG57qPo79wXlXGMOynQCA8Xl5ibgjaQyPPqk0sI+5pWpOUFmS3dtvWVk6Bjlzb7OeFcsqVmC1WAv9Oc0dnqnuWgTRXX9j1D1/qN+EF6ZaLz8yhN8kOgq+UNI7g2FqZo8exr7hF62frXIAJFMDVOe2X0A87kjVmD+cGfm2CEzO8gGpyKrj9dL1y4W1p/EO5ZYWtc2x5D+xyO0RaAAp9AFQQjUdpxtVZZlMwzpl613ef8+lX/eirwngp++dhs1fXe6h7OvPD0TR412v37y7/HnSMiOe4JDjiX7FJuKqSOMJi1h1/K868x96ShDT04Ly7zzj4hMYW6Dw6w/p5O+njOTV/VW/zv3t+zWpX/QClf80s7J/F0KhvKjmflJ5Hdai746XvAi3LpRAQo/y0QnR6gNpDGnvOqZtPAkkcH+iPa2Zw1ZfFreQ8b5sSFb9xUeniPdxV1LASiGMeB537TeZUiKhH4nOONX0bZDliWiU1G2Pay//a0yPUxTQjW87nknfQGLt3+aQ7Rz0AyWKfOekyFiUbLJlpWy3WxVBesz4y17+vY7wTRuDnMP/PS+K4j7NK1H6/wGv+StmtMGXEoEr/icERkBNcOe0BICEfS6E/6NMyv4DAmxikgBFEPsPd74PbF8GwXZdtylFri7K4xoshROR47pA5DlOtt+byT4fZbAHO1PO5y+B+PPWJ4v5P6Ed20dhKmwhAAAAAElFTkSuQmCC";
+    const m={name:"Mon Espace",short_name:"Mon Espace",start_url:".",display:"standalone",background_color:"#f4f7fc",theme_color:"#2563eb",icons:[{src:icon,sizes:"192x192",type:"image/png",purpose:"any maskable"},{src:icon,sizes:"512x512",type:"image/png",purpose:"any"}]};
+    const url=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}));
+    const l=document.getElementById("manifestLink");if(l)l.href=url;
+  }catch(e){}
+}
+
 /* ---------- init ---------- */
+buildManifest();
 document.getElementById("wDate").value=todayKey();
 addExRow();
 renderAll();
@@ -1082,6 +1384,7 @@ renderCloudUI();
 initCloud();
 renderNotifUI();
 startNotifScheduler();
+renderGeminiStatus();
 </script>
 </body>
 </html>
