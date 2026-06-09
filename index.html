@@ -736,7 +736,8 @@ function wipeLocal(){
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 
 /* ---------- dates ---------- */
-function todayKey(d=new Date()){return d.toISOString().slice(0,10);}
+// clé du jour en heure LOCALE (le jour change à minuit chez l'utilisateur, pas en UTC)
+function todayKey(d=new Date()){const z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,10);}
 function frDate(key){
   const d=new Date(key+"T00:00:00");
   return d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
@@ -1815,17 +1816,18 @@ function renderQuiz(){
   }
   const dayNum=daysBetween(q.course.start,today)+1;
   const reviews=(q.review||[]).filter(r=>!r.mastered&&r.due<=today);
+  const doneToday=!!(q.day&&q.day.date===today);
   let html=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <div><strong>${esc(q.course.theme)}</strong><div class="dim">Jour ${Math.min(dayNum,q.course.days)}/${q.course.days} · ${q.correctTotal||0} bonnes réponses au total</div></div>
-      <button class="iconbtn" onclick="endCourse()">✕</button></div>
+      <div><strong>${esc(q.course.theme)}</strong><div class="dim">Jour ${dayNum} · ${q.correctTotal||0} bonnes réponses au total</div></div>
+      <button class="iconbtn" onclick="endCourse()" title="Changer de thème">✕</button></div>
       <div class="dim" id="quizProgress" style="margin-top:6px"></div></div>`;
-  if(reviews.length){html+=`<h2 class="section-title">À revoir (${reviews.length})</h2>`+reviews.map(r=>qcardHTML(r,"review",r.id)).join("");}
-  if(q.day&&q.day.date===today){
+  if(reviews.length){html+=`<h2 class="section-title">À revoir (${reviews.length}) — tes ratées</h2>`+reviews.map(r=>qcardHTML(r,"review",r.id)).join("");}
+  if(doneToday){
     html+=`<h2 class="section-title">Questions du jour</h2>`+q.day.items.map((it,i)=>qcardHTML(it,"today",i)).join("");
-  }else if(dayNum<=q.course.days){
-    html+=`<div class="card"><button class="btn full" onclick="generateDaySet()">🧩 Générer les 10 questions du jour</button><p class="dim" style="margin-top:6px">1 appel à l'IA. Les ratées reviendront demain.</p></div>`;
+    const answered=q.day.items.filter(x=>x.answered).length, t=q.day.items.length;
+    if(answered>=t){html+=`<div class="card"><strong>Quiz du jour terminé ✅</strong><p class="dim" style="margin-top:4px">Reviens <b>demain</b> pour 10 nouvelles questions. Tes ratées d'aujourd'hui reviendront en révision.</p></div>`;}
   }else{
-    html+=`<div class="card"><strong>Cours terminé 🎉</strong><p class="dim" style="margin-top:4px">Tu as bouclé les 7 jours. Finis tes révisions ci-dessus, ou lance un nouveau thème.</p><button class="btn ghost full" style="margin-top:8px" onclick="endCourse()">Nouveau cours</button></div>`;
+    html+=`<div class="card"><button class="btn full" onclick="generateDaySet()">🧩 Générer les 10 questions du jour</button><p class="dim" style="margin-top:6px">Un nouveau quiz chaque jour (1 appel à l'IA). Les questions ratées reviennent ci-dessus le lendemain.</p></div>`;
   }
   el.innerHTML=html;updateQuizProgress();
 }
