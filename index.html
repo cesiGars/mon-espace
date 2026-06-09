@@ -270,6 +270,17 @@
   .avatar-sub{font-size:12.5px;color:var(--muted);margin-top:3px}
   .avatar-bar{height:10px;border-radius:8px;background:#eef1f8;overflow:hidden;margin-top:8px}
   .avatar-bar>div{height:100%;background:var(--grad);border-radius:8px;transition:width .8s cubic-bezier(.22,1,.36,1)}
+
+  /* quiz */
+  .qcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:11px;box-shadow:var(--shadow)}
+  .qq{font-weight:700;margin-bottom:11px;line-height:1.4}
+  .qopts{display:flex;flex-direction:column;gap:8px}
+  .qopt{text-align:left;border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px 13px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:600;color:var(--ink);transition:border-color .12s}
+  .qopt:hover:not(:disabled){border-color:var(--accent)}
+  .qopt:disabled{cursor:default}
+  .qopt.ok{background:#e6f7ef;border-color:#3bb273;color:#1e7a52}
+  .qopt.ko{background:#fcebe9;border-color:#e2483d;color:#b3392e}
+  .qexp{margin-top:11px;font-size:13px;color:#3a3833;background:#f5f7fc;border-radius:11px;padding:11px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -408,6 +419,13 @@
     <div class="card" id="entryList"></div>
   </section>
 
+  <!-- QUIZ -->
+  <section class="view" id="view-quiz">
+    <h2 class="section-title">Quiz · apprendre</h2>
+    <div id="quizBody"></div>
+    <input type="file" id="quizFile" accept="image/*,application/pdf,.txt,.md" style="display:none" onchange="onQuizFile(event)">
+  </section>
+
   <!-- réglages -->
   <section class="view" id="view-settings">
     <h2 class="section-title">Synchro entre appareils</h2>
@@ -519,6 +537,7 @@
   <button data-v="gym"><span class="ic">🏋️</span>Muscu</button>
   <button data-v="goals"><span class="ic">🎯</span>Objectifs</button>
   <button data-v="journal"><span class="ic">📓</span>Journal</button>
+  <button data-v="quiz"><span class="ic">🧩</span>Quiz</button>
   <button data-v="settings"><span class="ic">⚙️</span>Réglages</button>
 </nav>
 
@@ -545,8 +564,8 @@ const BAKED_CONFIG = {
 const KEY="mon-espace-v1";
 let DB=load();
 function load(){
-  try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);d.settings=d.settings||{};return d;}}catch(e){}
-  return {habits:[],sessions:[],goals:[],entries:[],settings:{}};
+  try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);d.settings=d.settings||{};d.quiz=d.quiz||null;return d;}}catch(e){}
+  return {habits:[],sessions:[],goals:[],entries:[],settings:{},quiz:null};
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(DB));pushCloud();}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
@@ -990,8 +1009,9 @@ function statsXP(){
   DB.habits.forEach(h=>{const s=acc[h.stat]!==undefined?h.stat:"disc";const pts=Object.keys(h.done||{}).length*2;acc[s]+=h.bad?-pts:pts;});
   // Force : +6 par séance + 1 par exercice
   DB.sessions.forEach(s=>{acc.force+=6+(s.ex?s.ex.length:0);});
-  // Clarté : +4 par entrée de journal
+  // Clarté : +4 par entrée de journal + 3 par bonne réponse au quiz
   acc.clar+=DB.entries.length*4;
+  if(DB.quiz&&DB.quiz.correctTotal)acc.clar+=DB.quiz.correctTotal*3;
   // Vision : +3 par objectif créé, +12 si résolu
   DB.goals.forEach(g=>{acc.vis+=3+(g.done?12:0);});
   // Santé (saisie du jour) -> nourrit les stats, cumulé sur tous les jours
@@ -1133,8 +1153,10 @@ const AVATARS=[
 ];
 function totalPower(){const x=statsXP();return Math.max(0,x.force)+Math.max(0,x.disc)+Math.max(0,x.clar)+Math.max(0,x.vis);}
 function avatarTier(p){let i=0;for(let k=0;k<AVATARS.length;k++){if(p>=AVATARS[k].min)i=k;}return i;}
+const AV_EXTS=["png","PNG","jpg","JPG","jpeg","JPEG","webp"];
 function avatarImgFail(img,idx){
-  if(!img.dataset.alt){img.dataset.alt="1";img.src="avatar"+idx+".jpg";}
+  let n=parseInt(img.dataset.exti||"0",10)+1;
+  if(n<AV_EXTS.length){img.dataset.exti=n;img.src="avatar"+idx+"."+AV_EXTS[n];}
   else{img.style.display="none";const f=document.getElementById("avatarFallback");if(f)f.style.display="block";}
 }
 function renderAvatar(){
@@ -1291,7 +1313,142 @@ function applyHealthFromAI(obj){
   toast(n?`${n} valeur${n>1?'s':''} importée${n>1?'s':''} ✅`:"Rien trouvé sur la capture 🤔");
 }
 
-function renderAll(){renderHome();renderHabits();renderSessions();renderGoals();renderEntries();renderHealth();renderGeminiStatus();}
+/* ============================================================
+   QUIZ — apprentissage (Gemini) + révision espacée
+   ============================================================ */
+function QZ(){if(!DB.quiz)DB.quiz={course:null,day:null,review:[],correctTotal:0,asked:[]};return DB.quiz;}
+function addDays(n){const d=new Date();d.setDate(d.getDate()+n);return d;}
+function daysBetween(startKey,endKey){return Math.round((new Date(endKey+"T00:00:00")-new Date(startKey+"T00:00:00"))/86400000);}
+function fileB64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(f);});}
+let quizFilePart=null;
+function onQuizFile(ev){
+  const f=ev.target.files[0];ev.target.value="";if(!f)return;
+  const nm=document.getElementById("quizFileName");if(nm)nm.textContent="📎 "+f.name+" (lecture…)";
+  prepQuizFile(f).then(p=>{quizFilePart=p;if(nm)nm.textContent="📎 "+f.name+" ✓";}).catch(()=>{if(nm)nm.textContent="Fichier illisible";});
+}
+function prepQuizFile(f){
+  if(f.type.startsWith("image/"))return resizeImg(f,1100).then(b64=>({mime:"image/jpeg",data:b64}));
+  if(f.type==="application/pdf")return fileB64(f).then(b64=>({mime:"application/pdf",data:b64}));
+  return f.text().then(t=>({text:(t||"").slice(0,12000)}));
+}
+// appel Gemini générique avec parts
+function geminiCall(parts,jsonMode){
+  return fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(geminiKey())}`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({contents:[{parts}],generationConfig:jsonMode?{responseMimeType:"application/json",temperature:0.4}:{temperature:0.3}})
+  }).then(r=>r.json()).then(j=>{
+    if(j.error)throw new Error(j.error.message||"Gemini error");
+    const t=j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts[0].text;
+    if(!t)throw new Error("Réponse vide");
+    return t;
+  });
+}
+function partFrom(fp){if(!fp)return null;if(fp.text)return {text:"Contenu source:\n"+fp.text};return {inline_data:{mime_type:fp.mime,data:fp.data}};}
+function startCourse(){
+  const theme=(document.getElementById("quizTheme").value||"").trim();
+  if(!theme&&!quizFilePart){toast("Donne un thème ou un fichier");return;}
+  if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages ⚙️");go("settings");return;}
+  const q=QZ();q.course={theme:theme||"(d'après ton fichier)",start:todayKey(),days:7,notes:""};
+  q.day=null;q.review=q.review||[];q.correctTotal=q.correctTotal||0;q.asked=[];
+  const msg=document.getElementById("quizMsg");if(msg)msg.textContent="Préparation du cours… 🤖";
+  const fp=quizFilePart;
+  const prep=fp?geminiCall([{text:"Résume en notes détaillées (max 400 mots), en français, le contenu de ce document/image, pour servir de base à des QCM. Donne juste le texte des notes."},partFrom(fp)].filter(Boolean),false):Promise.resolve("");
+  prep.then(notes=>{q.course.notes=(notes||"").slice(0,4000);quizFilePart=null;save();generateDaySet();})
+    .catch(e=>{console.error(e);if(msg)msg.textContent="Échec : "+(e.message||"").slice(0,60);});
+}
+function generateDaySet(){
+  if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages ⚙️");go("settings");return;}
+  const q=QZ();if(!q.course)return;
+  toast("Génération des questions… 🤖");
+  const avoid=(q.asked||[]).slice(-40);
+  const prompt="Génère exactement 10 questions à choix multiples (QCM) en français sur le thème: « "+q.course.theme+" ». "+
+    (q.course.notes?("Base-toi sur ces notes:\n"+q.course.notes+"\n"):"")+
+    (avoid.length?("Évite de reposer ces questions déjà posées: "+avoid.join(" | ")+". "):"")+
+    "Varie la difficulté. Réponds STRICTEMENT en JSON: un objet {\"questions\":[{\"q\":\"...\",\"options\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":0,\"exp\":\"courte explication\"}]}. 'correct' est l'index 0-3 de la bonne option.";
+  geminiCall([{text:prompt}],true).then(t=>{
+    let data;try{data=JSON.parse(t);}catch(e){throw new Error("JSON illisible");}
+    let arr=Array.isArray(data)?data:(data.questions||data.items||[]);
+    arr=arr.filter(x=>x&&x.q&&Array.isArray(x.options)&&x.options.length>=2).slice(0,10);
+    if(!arr.length)throw new Error("Aucune question");
+    arr.forEach(x=>{x.correct=Math.max(0,Math.min(x.options.length-1,parseInt(x.correct,10)||0));});
+    q.day={date:todayKey(),items:arr.map(x=>({q:x.q,options:x.options,correct:x.correct,exp:x.exp||""}))};
+    q.asked=(q.asked||[]).concat(arr.map(x=>x.q)).slice(-80);
+    save();renderQuiz();toast("10 questions prêtes ✅");
+  }).catch(e=>{console.error(e);toast("Échec : "+(e.message||"").slice(0,60));});
+}
+function scheduleReview(item){
+  const q=QZ();q.review=q.review||[];
+  q.review.push({id:uid(),q:item.q,options:item.options,correct:item.correct,exp:item.exp,due:todayKey(addDays(1))});
+}
+function quizAnswer(btn,kind,key,ci){
+  const card=btn.closest(".qcard");if(!card||card.dataset.done)return;card.dataset.done="1";
+  const correct=parseInt(card.dataset.correct,10);
+  card.querySelectorAll(".qopt").forEach((b,i)=>{b.disabled=true;if(i===correct)b.classList.add("ok");else if(i===ci)b.classList.add("ko");});
+  let item;const q=QZ();
+  if(kind==="today"){item=q.day.items[key];}else{item=(q.review||[]).find(x=>x.id===key);}
+  if(!item)return;
+  const ok=ci===correct;item.answered=true;item.chosen=ci;item.ok=ok;
+  const exp=card.querySelector(".qexp");if(exp){exp.style.display="block";exp.innerHTML=(ok?"✅ Correct ! ":"❌ Bonne réponse : <b>"+esc(item.options[correct])+"</b>. ")+(item.exp?"<br>"+esc(item.exp):"");}
+  if(ok){q.correctTotal=(q.correctTotal||0)+1;if(kind==="review")item.mastered=true;}
+  else{if(kind==="today")scheduleReview(item);else item.due=todayKey(addDays(1));}
+  save();updateQuizProgress();renderHome();
+}
+function qcardHTML(item,kind,key){
+  const a=item.answered;
+  const opts=item.options.map((o,ci)=>{let cls="qopt";if(a){if(ci===item.correct)cls+=" ok";else if(ci===item.chosen)cls+=" ko";}
+    return `<button class="${cls}" ${a?"disabled":""} onclick="quizAnswer(this,'${kind}','${key}',${ci})">${esc(o)}</button>`;}).join("");
+  const expH=a?((item.ok?"✅ Correct ! ":"❌ Bonne réponse : <b>"+esc(item.options[item.correct])+"</b>. ")+(item.exp?"<br>"+esc(item.exp):"")):"";
+  return `<div class="qcard" data-correct="${item.correct}" ${a?'data-done="1"':''}>
+    <div class="qq">${esc(item.q)}</div>
+    <div class="qopts">${opts}</div>
+    <div class="qexp" style="display:${a?'block':'none'}">${expH}</div>
+  </div>`;
+}
+function updateQuizProgress(){
+  const el=document.getElementById("quizProgress");if(!el)return;const q=QZ();
+  let n=0,t=0;if(q.day&&q.day.date===todayKey()){t=q.day.items.length;n=q.day.items.filter(x=>x.answered).length;}
+  el.textContent=t?`${n}/${t} répondues aujourd'hui`:"";
+}
+function endCourse(){
+  if(!confirm("Arrêter ce cours ? (les questions à revoir seront effacées)"))return;
+  DB.quiz={course:null,day:null,review:[],correctTotal:(QZ().correctTotal||0),asked:[]};
+  save();renderQuiz();
+}
+function renderQuiz(){
+  const el=document.getElementById("quizBody");if(!el)return;const q=QZ();const today=todayKey();
+  if(!q.course){
+    el.innerHTML=`<div class="card">
+      <strong>Nouveau cours · 7 jours</strong>
+      <p class="dim" style="margin-top:4px">Donne un thème et/ou un fichier (PDF, notes, photo de cours). L'IA te fait <b>10 QCM par jour pendant une semaine</b>, et les questions ratées reviennent le lendemain. Les bonnes réponses font monter ta <b>🧠 Clarté</b>.</p>
+      <label class="fld" style="margin-top:8px">Thème</label>
+      <input id="quizTheme" placeholder="ex. La Révolution française, les protéines, le code de la route…">
+      <div id="quizFileName" class="dim" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn ghost" onclick="document.getElementById('quizFile').click()">📎 Fichier / photo</button>
+        <button class="btn" onclick="startCourse()">Démarrer</button>
+      </div>
+      <p class="dim" id="quizMsg" style="margin-top:8px"></p>
+    </div>`;
+    return;
+  }
+  const dayNum=daysBetween(q.course.start,today)+1;
+  const reviews=(q.review||[]).filter(r=>!r.mastered&&r.due<=today);
+  let html=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <div><strong>${esc(q.course.theme)}</strong><div class="dim">Jour ${Math.min(dayNum,q.course.days)}/${q.course.days} · ${q.correctTotal||0} bonnes réponses au total</div></div>
+      <button class="iconbtn" onclick="endCourse()">✕</button></div>
+      <div class="dim" id="quizProgress" style="margin-top:6px"></div></div>`;
+  if(reviews.length){html+=`<h2 class="section-title">À revoir (${reviews.length})</h2>`+reviews.map(r=>qcardHTML(r,"review",r.id)).join("");}
+  if(q.day&&q.day.date===today){
+    html+=`<h2 class="section-title">Questions du jour</h2>`+q.day.items.map((it,i)=>qcardHTML(it,"today",i)).join("");
+  }else if(dayNum<=q.course.days){
+    html+=`<div class="card"><button class="btn full" onclick="generateDaySet()">🧩 Générer les 10 questions du jour</button><p class="dim" style="margin-top:6px">1 appel à l'IA. Les ratées reviendront demain.</p></div>`;
+  }else{
+    html+=`<div class="card"><strong>Cours terminé 🎉</strong><p class="dim" style="margin-top:4px">Tu as bouclé les 7 jours. Finis tes révisions ci-dessus, ou lance un nouveau thème.</p><button class="btn ghost full" style="margin-top:8px" onclick="endCourse()">Nouveau cours</button></div>`;
+  }
+  el.innerHTML=html;updateQuizProgress();
+}
+
+function renderAll(){renderHome();renderHabits();renderSessions();renderGoals();renderEntries();renderHealth();renderGeminiStatus();renderQuiz();}
 
 /* ============================================================
    SYNCHRO CLOUD (Firebase Auth + Firestore, temps réel)
@@ -1393,7 +1550,7 @@ function pushNow(){
     .then(()=>setCloudDot("on","Synchronisé"))
     .catch(e=>{console.error(e);setCloudDot("err","Erreur sync");});
 }
-function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[],settings:d.settings||{}};}
+function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[],settings:d.settings||{},quiz:d.quiz||null};}
 
 /* ---- auth actions ---- */
 function authErr(e){
