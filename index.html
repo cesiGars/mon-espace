@@ -307,6 +307,30 @@
   .cb-emoji{font-size:30px;animation:cbpop 1s ease infinite}
   @keyframes cbpop{0%,100%{transform:scale(1)}50%{transform:scale(1.25) rotate(-8deg)}}
   .cb-x{margin-left:auto;background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:8px;width:26px;height:26px;cursor:pointer;flex:none}
+
+  /* header gear */
+  .hdr-gear{border:1px solid var(--line);background:#fff;border-radius:50%;width:38px;height:38px;font-size:17px;cursor:pointer;flex:none;display:grid;place-items:center}
+
+  /* finance */
+  .fin-total{text-align:center;padding:6px 0 2px}
+  .fin-total .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+  .fin-total .amt{font-size:34px;font-weight:800;letter-spacing:-.02em;margin-top:2px}
+  .fin-donut{display:flex;align-items:center;gap:16px;margin-top:8px}
+  .fin-legend{flex:1;display:flex;flex-direction:column;gap:7px}
+  .fin-leg{display:flex;align-items:center;gap:8px;font-size:13px}
+  .fin-leg .dot{width:11px;height:11px;border-radius:3px;flex:none}
+  .fin-leg .nm{flex:1;font-weight:600}
+  .fin-leg .v{font-weight:700;font-variant-numeric:tabular-nums}
+  .fin-leg .pc{color:var(--muted);font-size:11px;width:38px;text-align:right}
+  .acc-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line)}
+  .acc-row:last-child{border-bottom:none}
+  .acc-cat{width:9px;height:9px;border-radius:50%;flex:none}
+  .acc-name{flex:1;font-weight:600;font-size:14px}
+  .acc-amt{font-weight:700;font-variant-numeric:tabular-nums}
+  .snap-row{display:flex;justify-content:space-between;padding:7px 2px;border-bottom:1px solid var(--line);font-size:13px}
+  .snap-row:last-child{border-bottom:none}
+  .snap-up{color:#1e7a52;font-weight:700}
+  .snap-down{color:#c0392b;font-weight:700}
 </style>
 </head>
 <body>
@@ -326,7 +350,10 @@
           <div class="date" id="todayLabel"></div>
         </div>
       </div>
-      <button id="cloudDot" class="clouddot off" onclick="go('settings')" title="Synchro">☁ <span id="cloudDotTxt">Hors-ligne</span></button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="cloudDot" class="clouddot off" onclick="go('settings')" title="Synchro">☁ <span id="cloudDotTxt">Hors-ligne</span></button>
+        <button class="hdr-gear" onclick="go('settings')" title="Réglages" aria-label="Réglages">⚙️</button>
+      </div>
     </div>
   </header>
 
@@ -386,19 +413,19 @@
       </label>
       <div id="autoFields" style="display:none;margin-top:10px">
         <div class="row">
-          <select id="goalMetric">
+          <select id="goalMetric" onchange="updateGoalTargetUI()">
             <option value="steps">👟 Pas</option>
-            <option value="sleepHours">😴 Sommeil (h)</option>
+            <option value="sleepHours">😴 Sommeil</option>
             <option value="workoutCount">🏋️ Séances</option>
             <option value="activeCalories">🔥 Calories actives</option>
-            <option value="screenMinutes">📱 Temps d'écran (min)</option>
+            <option value="screenMinutes">📱 Temps d'écran</option>
           </select>
           <select id="goalOp" style="max-width:120px">
             <option value=">=">au moins</option>
             <option value="<=">au plus</option>
           </select>
-          <input id="goalTarget" type="number" inputmode="numeric" placeholder="cible" style="max-width:90px">
         </div>
+        <div id="goalTargetWrap" style="margin-top:8px"></div>
         <p class="dim" style="margin-top:6px">Se coche tout seul quand ta donnée du jour atteint la cible. (Tu saisis tes chiffres dans la carte « Santé · saisie du jour ».)</p>
       </div>
       <button class="btn full" style="margin-top:10px" onclick="addGoal()">Ajouter</button>
@@ -446,6 +473,13 @@
     </div>
     <h2 class="section-title">Mes entrées</h2>
     <div class="card" id="entryList"></div>
+  </section>
+
+  <!-- FINANCE -->
+  <section class="view" id="view-finance">
+    <h2 class="section-title">Finance · patrimoine</h2>
+    <div id="financeBody"></div>
+    <input type="file" id="financeFile" accept="image/*" style="display:none" onchange="onFinanceShot(event)">
   </section>
 
   <!-- QUIZ -->
@@ -575,7 +609,7 @@
   <button data-v="amis"><span class="ic">👥</span>Amis</button>
   <button data-v="journal"><span class="ic">📓</span>Journal</button>
   <button data-v="quiz"><span class="ic">🧩</span>Quiz</button>
-  <button data-v="settings"><span class="ic">⚙️</span>Réglages</button>
+  <button data-v="finance"><span class="ic">💰</span>Finance</button>
 </nav>
 
 <div class="challenge-banner" id="challengeBanner"></div>
@@ -602,8 +636,8 @@ const BAKED_CONFIG = {
 const KEY="mon-espace-v1";
 let DB=load();
 function load(){
-  try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);d.settings=d.settings||{};d.quiz=d.quiz||null;d.social=d.social||null;return d;}}catch(e){}
-  return {habits:[],sessions:[],goals:[],entries:[],settings:{},quiz:null,social:null};
+  try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);d.settings=d.settings||{};d.quiz=d.quiz||null;d.social=d.social||null;d.finance=d.finance||null;return d;}}catch(e){}
+  return {habits:[],sessions:[],goals:[],entries:[],settings:{},quiz:null,social:null,finance:null};
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(DB));pushCloud();}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
@@ -637,6 +671,7 @@ function go(v){
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("active",b.dataset.v===v));
   window.scrollTo(0,0);
   if(v==="amis")renderAmis();
+  if(v==="finance")renderFinance();
 }
 
 /* ---------- toast ---------- */
@@ -867,9 +902,24 @@ function renderSessions(){
 function toggleAutoFields(){
   const on=document.getElementById("goalAuto").checked;
   document.getElementById("autoFields").style.display=on?"block":"none";
+  if(on)updateGoalTargetUI();
 }
-function metricLabel(m){return {steps:"Pas",sleepHours:"Sommeil (h)",workoutCount:"Séances",activeCalories:"Calories actives",screenMinutes:"Temps d'écran (min)"}[m]||m;}
-function autoLabel(a){return `${metricLabel(a.metric)} ${a.op===">="?"≥":"≤"} ${a.target}`;}
+function updateGoalTargetUI(){
+  const wrap=document.getElementById("goalTargetWrap");if(!wrap)return;
+  const m=document.getElementById("goalMetric").value;
+  if(m==="screenMinutes"||m==="sleepHours"){
+    wrap.innerHTML=`<div class="htime"><input id="goalTargetH" class="hinput" type="number" min="0" placeholder="0" style="width:60px"><span class="hunit">h</span><input id="goalTargetM" class="hinput" type="number" min="0" max="59" placeholder="00" style="width:60px"><span class="hunit">min</span></div>`;
+  }else{
+    wrap.innerHTML=`<input id="goalTarget" type="number" inputmode="numeric" placeholder="cible" style="max-width:130px">`;
+  }
+}
+function metricLabel(m){return {steps:"Pas",sleepHours:"Sommeil",workoutCount:"Séances",activeCalories:"Calories actives",screenMinutes:"Temps d'écran"}[m]||m;}
+function fmtTarget(metric,t){
+  if(metric==="sleepHours"){const H=Math.floor(t),M=Math.round((t-H)*60);return M?`${H}h${String(M).padStart(2,"0")}`:`${H}h`;}
+  if(metric==="screenMinutes"){const H=Math.floor(t/60),M=Math.round(t%60);return H?(M?`${H}h${String(M).padStart(2,"0")}`:`${H}h`):`${M}min`;}
+  return t;
+}
+function autoLabel(a){return `${metricLabel(a.metric)} ${a.op===">="?"≥":"≤"} ${fmtTarget(a.metric,a.target)}`;}
 function metricValue(m){
   const h=HEALTH[todayKey()]||{};
   const v=num(h[m]);
@@ -893,9 +943,19 @@ function addGoal(){
   const auto=document.getElementById("goalAuto").checked;
   let autoObj=null;
   if(auto){
-    const target=parseFloat(document.getElementById("goalTarget").value);
-    if(isNaN(target)){toast("Indique une valeur cible");return;}
-    autoObj={metric:document.getElementById("goalMetric").value,op:document.getElementById("goalOp").value,target};
+    const m=document.getElementById("goalMetric").value;
+    let target;
+    if(m==="screenMinutes"||m==="sleepHours"){
+      const hEl=document.getElementById("goalTargetH"),mEl=document.getElementById("goalTargetM");
+      const hh=parseInt((hEl&&hEl.value)||"",10)||0,mm=parseInt((mEl&&mEl.value)||"",10)||0;
+      if(hh===0&&mm===0){toast("Indique une cible (h/min)");return;}
+      target=m==="sleepHours"?(hh+mm/60):(hh*60+mm);
+    }else{
+      const tEl=document.getElementById("goalTarget");
+      target=parseFloat((tEl&&tEl.value)||"");
+      if(isNaN(target)){toast("Indique une valeur cible");return;}
+    }
+    autoObj={metric:m,op:document.getElementById("goalOp").value,target};
     if(!t)t=autoLabel(autoObj);
   }
   if(!t)return;
@@ -903,7 +963,7 @@ function addGoal(){
   if(autoObj)g.auto=autoObj;
   DB.goals.unshift(g);
   i.value="";n.value="";
-  document.getElementById("goalAuto").checked=false;document.getElementById("goalTarget").value="";toggleAutoFields();
+  document.getElementById("goalAuto").checked=false;toggleAutoFields();
   evalAutoGoals();save();renderGoals();renderHome();toast("Ajouté à ta liste");
 }
 function toggleGoal(id){
@@ -925,7 +985,7 @@ function renderGoals(){
     let sub="";
     if(g.auto){
       const v=metricValue(g.auto.metric);
-      const cur=(v===null||v===undefined||isNaN(v))?"—":(g.auto.metric==="sleepHours"?(+v).toFixed(1):v.toLocaleString("fr-FR"));
+      const cur=(v===null||v===undefined||isNaN(v))?"—":((g.auto.metric==="sleepHours"||g.auto.metric==="screenMinutes")?fmtTarget(g.auto.metric,v):v.toLocaleString("fr-FR"));
       sub=`<small>🤖 ${autoLabel(g.auto)} · ${cur} aujourd'hui</small>`;
     }else if(g.note){sub=`<small>${esc(g.note)}</small>`;}
     const click=g.auto?`onclick="toggleGoal('${g.id}')"`:`onclick="toggleGoal('${g.id}')"`;
@@ -1488,8 +1548,13 @@ function qcardHTML(item,kind,key){
 }
 function updateQuizProgress(){
   const el=document.getElementById("quizProgress");if(!el)return;const q=QZ();
-  let n=0,t=0;if(q.day&&q.day.date===todayKey()){t=q.day.items.length;n=q.day.items.filter(x=>x.answered).length;}
-  el.textContent=t?`${n}/${t} répondues aujourd'hui`:"";
+  if(q.day&&q.day.date===todayKey()){
+    const items=q.day.items;const t=items.length;
+    const answered=items.filter(x=>x.answered).length;
+    const correct=items.filter(x=>x.ok).length;
+    if(answered>=t&&t>0){el.innerHTML=`<b>Note du jour : ${correct}/${t}</b> ${correct/t>=0.5?'✅':'😬'}`;}
+    else{el.innerHTML=`Note : <b>${correct}/${t}</b> · ${answered}/${t} répondues`;}
+  }else{el.textContent="";}
 }
 function endCourse(){
   if(!confirm("Arrêter ce cours ? (les questions à revoir seront effacées)"))return;
@@ -1533,22 +1598,28 @@ function renderQuiz(){
 /* ============================================================
    AMIS · profil public, code ami, classement, défis (Firestore)
    ============================================================ */
-function SOC(){if(!DB.social)DB.social={name:"",code:"",friends:[]};return DB.social;}
-function genCode(){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+function SOC(){if(!DB.social)DB.social={name:"",friends:[]};return DB.social;}
+// code ami unique et stable, dérivé de l'identifiant de compte (chaque email = code différent)
+function codeFromUid(uid){
+  let h=2166136261>>>0;
+  for(let i=0;i<uid.length;i++){h^=uid.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}
+  const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="",x=h;
+  for(let i=0;i<6;i++){s+=c[x%c.length];x=Math.floor(x/c.length);if(x<c.length)x=Math.imul(x^(i+1),2654435761)>>>0;}
+  return s;
+}
+function myCode(){return cloud.uid?codeFromUid(cloud.uid):"";}
 function fs(){return firebase.firestore();}
 function myLevel(){return avatarTier(totalPower())+1;}
-function myProfilePayload(){const s=SOC();return {name:s.name||"Anonyme",code:s.code,avatarLevel:myLevel(),score:dayScore(),updatedAt:Date.now()};}
+function myProfilePayload(){const s=SOC();return {name:s.name||"Anonyme",code:myCode(),avatarLevel:myLevel(),score:dayScore(),updatedAt:Date.now()};}
 let profileT=null;
 function syncProfile(){
   if(!cloud.uid||typeof firebase==="undefined")return;
-  const s=SOC();if(!s.code){s.code=genCode();save();}
   clearTimeout(profileT);
   profileT=setTimeout(()=>{try{fs().collection("profiles").doc(cloud.uid).set(myProfilePayload(),{merge:true});}catch(e){}},800);
 }
 let CH={incoming:[],outgoing:[]};
 function startSocial(){
   if(!cloud.uid)return;
-  const s=SOC();if(!s.code){s.code=genCode();save();}
   syncProfile();
   // défis reçus / envoyés
   try{
@@ -1566,12 +1637,12 @@ function startSocial(){
 function stopSocial(){if(cloud.chIn){cloud.chIn();cloud.chIn=null;}if(cloud.chOut){cloud.chOut();cloud.chOut=null;}CH={incoming:[],outgoing:[]};}
 
 function saveName(){const v=(document.getElementById("socName").value||"").trim().slice(0,20);SOC().name=v;save();syncProfile();renderAmis();toast("Pseudo enregistré");}
-function copyCode(){const c=SOC().code||"";if(navigator.clipboard)navigator.clipboard.writeText(c);toast("Code copié : "+c);}
+function copyCode(){const c=myCode();if(navigator.clipboard)navigator.clipboard.writeText(c);toast("Code copié : "+c);}
 function addFriend(){
   if(!cloud.uid){toast("Connecte-toi d'abord (Réglages)");go("settings");return;}
   const code=(document.getElementById("friendCode").value||"").trim().toUpperCase();
   if(!code){toast("Entre le code de ton pote");return;}
-  if(code===SOC().code){toast("C'est ton propre code 😄");return;}
+  if(code===myCode()){toast("C'est ton propre code 😄");return;}
   toast("Recherche…");
   fs().collection("profiles").where("code","==",code).limit(1).get().then(qs=>{
     if(qs.empty){toast("Code introuvable");return;}
@@ -1663,7 +1734,7 @@ function friendName(uid){const f=(SOC().friends||[]).find(x=>x.uid===uid);return
 function renderAmis(){
   const el=document.getElementById("amisBody");if(!el)return;
   if(!cloud.uid){el.innerHTML=`<div class="card"><strong>Connecte-toi pour jouer avec tes amis</strong><p class="dim" style="margin-top:4px">Va dans Réglages ⚙️ et connecte ton compte. Tes amis pourront voir ton avatar et ta note, et te lancer des défis.</p><button class="btn full" style="margin-top:8px" onclick="go('settings')">Aller aux Réglages</button></div>`;return;}
-  const s=SOC();if(!s.code){s.code=genCode();save();syncProfile();}
+  const s=SOC();
   const pending=CH.incoming.filter(c=>c.status==="pending");
   const active=[...CH.incoming,...CH.outgoing].filter(c=>c.status==="accepted");
   el.innerHTML=`
@@ -1672,7 +1743,7 @@ function renderAmis(){
       <label class="fld" style="margin-top:8px">Ton pseudo</label>
       <div class="row"><input id="socName" placeholder="ex. Cesar" maxlength="20" value="${esc(s.name||"")}"><button class="btn" style="flex:none" onclick="saveName()">OK</button></div>
       <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;background:var(--accent-soft);border-radius:12px;padding:10px 14px">
-        <div><div class="dim" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em">Ton code ami</div><div style="font-size:22px;font-weight:800;letter-spacing:.12em;color:var(--accent)">${esc(s.code||"…")}</div></div>
+        <div><div class="dim" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em">Ton code ami</div><div style="font-size:22px;font-weight:800;letter-spacing:.12em;color:var(--accent)">${esc(myCode()||"…")}</div></div>
         <button class="btn ghost sm" onclick="copyCode()">Copier</button>
       </div>
     </div>
@@ -1700,6 +1771,109 @@ function maybeChallengeBanner(){
   }else{b.classList.remove("show");}
 }
 function hideBanner(){const b=document.getElementById("challengeBanner");if(b)b.classList.remove("show");}
+
+/* ============================================================
+   FINANCE · patrimoine (import IA + donut de répartition)
+   ============================================================ */
+function FIN(){if(!DB.finance)DB.finance={accounts:[],snapshots:[]};return DB.finance;}
+const FINCATS=[
+  {k:"courant",l:"Courant",color:"#2563eb"},
+  {k:"epargne",l:"Épargne",color:"#3bb273"},
+  {k:"invest",l:"Investissement",color:"#6366f1"},
+  {k:"crypto",l:"Crypto",color:"#f59e0b"},
+  {k:"autre",l:"Autre",color:"#94a3b8"}
+];
+function finCatMeta(k){return FINCATS.find(c=>c.k===k)||FINCATS[4];}
+function eur(n){return (Math.round(n)).toLocaleString("fr-FR")+" €";}
+function finTotals(){
+  const t={};FINCATS.forEach(c=>t[c.k]=0);
+  (FIN().accounts||[]).forEach(a=>{const k=t[a.category]!==undefined?a.category:"autre";t[k]+=Number(a.amount)||0;});
+  return t;
+}
+function finTotal(){return (FIN().accounts||[]).reduce((s,a)=>s+(Number(a.amount)||0),0);}
+function donutSVG(){
+  const t=finTotals();const tot=finTotal()||1;const R=54,C=2*Math.PI*R;let off=0,segs="";
+  FINCATS.forEach(c=>{const v=t[c.k];if(v<=0)return;const len=v/tot*C;
+    segs+=`<circle cx="70" cy="70" r="${R}" fill="none" stroke="${c.color}" stroke-width="22" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 70 70)"/>`;
+    off+=len;});
+  if(!segs)segs=`<circle cx="70" cy="70" r="${R}" fill="none" stroke="#eef1f8" stroke-width="22"/>`;
+  return `<svg width="140" height="140" viewBox="0 0 140 140" style="flex:none">${segs}<circle cx="70" cy="70" r="${R-11}" fill="var(--card)"/></svg>`;
+}
+function addAccount(){
+  const n=(document.getElementById("accName").value||"").trim();
+  const a=parseFloat((document.getElementById("accAmount").value||"").replace(",","."));
+  const cat=document.getElementById("accCat").value;
+  if(!n||isNaN(a)){toast("Nom + montant requis");return;}
+  upsertAccount(n,a,cat);save();renderFinance();toast("Compte ajouté");
+}
+function upsertAccount(name,amount,category){
+  const f=FIN();f.accounts=f.accounts||[];
+  const ex=f.accounts.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(ex){ex.amount=amount;ex.category=category||ex.category;}
+  else f.accounts.push({id:uid(),name,amount,category:category||"autre"});
+}
+function delAccount(id){FIN().accounts=(FIN().accounts||[]).filter(a=>a.id!==id);save();renderFinance();}
+function snapFinance(){
+  const f=FIN();f.snapshots=f.snapshots||[];
+  f.snapshots.push({date:todayKey(),total:Math.round(finTotal()),byCat:finTotals()});
+  if(f.snapshots.length>52)f.snapshots=f.snapshots.slice(-52);
+  save();renderFinance();toast("Instantané enregistré 📸");
+}
+/* import par capture (IA) */
+function onFinanceShot(ev){const fl=ev.target.files[0];ev.target.value="";if(fl)importFinanceShot(fl);}
+function importFinanceShot(file){
+  if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages ⚙️");go("settings");return;}
+  toast("Lecture de tes comptes… 🤖");
+  const prompt="Lis cette capture d'écran d'une application bancaire ou d'investissement (Revolut, Binance, banque, courtier…). Extrais chaque solde / position / portefeuille visible, avec un nom court et un montant numérique en euros. Catégorise chaque ligne parmi: 'courant' (compte courant), 'epargne' (livret/épargne), 'invest' (actions/ETF/bourse/PEA), 'crypto' (cryptomonnaies), 'autre'. Réponds STRICTEMENT en JSON {\"comptes\":[{\"nom\":\"...\",\"montant\":1234.5,\"categorie\":\"crypto\"}]}. 'montant' = nombre simple, sans symbole ni espace. Ignore les lignes sans montant clair.";
+  resizeImg(file,1200).then(b64=>geminiCall([{text:prompt},{inline_data:{mime_type:"image/jpeg",data:b64}}],true)).then(t=>{
+    let data;try{data=JSON.parse(t);}catch(e){throw new Error("JSON illisible");}
+    let arr=Array.isArray(data)?data:(data.comptes||data.accounts||[]);
+    let n=0;arr.forEach(x=>{const amt=Number((""+x.montant).replace(/[^0-9.\-]/g,""));if(x.nom&&!isNaN(amt)){const cat=FINCATS.some(c=>c.k===x.categorie)?x.categorie:"autre";upsertAccount((""+x.nom).slice(0,30),amt,cat);n++;}});
+    if(!n)throw new Error("Aucun compte détecté");
+    save();renderFinance();toast(n+" compte"+(n>1?"s":"")+" importé"+(n>1?"s":"")+" ✅");
+  }).catch(e=>{console.error(e);let m=(e&&e.message)||"";if(/not found|404/i.test(m))m="Modèle IA indisponible";else if(/API key|PERMISSION|403/i.test(m))m="Clé refusée";toast("Échec : "+m.slice(0,50));});
+}
+function renderFinance(){
+  const el=document.getElementById("financeBody");if(!el)return;
+  const f=FIN();const accounts=f.accounts||[];const total=finTotal();const t=finTotals();
+  const legend=FINCATS.filter(c=>t[c.k]>0).map(c=>`<div class="fin-leg"><span class="dot" style="background:${c.color}"></span><span class="nm">${c.l}</span><span class="v">${eur(t[c.k])}</span><span class="pc">${total?Math.round(t[c.k]/total*100):0}%</span></div>`).join("")||'<div class="dim">Aucune donnée.</div>';
+  // comptes groupés par catégorie
+  let accHtml="";
+  FINCATS.forEach(c=>{const list=accounts.filter(a=>a.category===c.k);if(!list.length)return;
+    accHtml+=`<div class="acc-row" style="border:none;padding-bottom:2px"><strong style="font-size:13px;color:${c.color}">${c.l}</strong></div>`+
+      list.map(a=>`<div class="acc-row"><span class="acc-cat" style="background:${c.color}"></span><span class="acc-name">${esc(a.name)}</span><span class="acc-amt">${eur(a.amount)}</span><button class="iconbtn" onclick="delAccount('${a.id}')">✕</button></div>`).join("");
+  });
+  // historique
+  const snaps=(f.snapshots||[]).slice(-6).reverse();
+  let hist="";
+  if(snaps.length){hist=snaps.map((s,i)=>{const prev=snaps[i+1];const dlt=prev?s.total-prev.total:null;
+    return `<div class="snap-row"><span>${frDate(s.date)}</span><span>${eur(s.total)} ${dlt!==null?`<span class="${dlt>=0?'snap-up':'snap-down'}">${dlt>=0?'▲':'▼'} ${eur(Math.abs(dlt))}</span>`:''}</span></div>`;}).join("");}
+  el.innerHTML=`
+    <div class="dash-card">
+      <div class="fin-total"><div class="lbl">Patrimoine total</div><div class="amt">${eur(total)}</div></div>
+      <div class="fin-donut">${donutSVG()}<div class="fin-legend">${legend}</div></div>
+    </div>
+    <button class="btn full" onclick="pickFinanceShot()">📷 Importer une capture (IA)</button>
+    <div class="row" style="margin-top:8px">
+      <button class="btn ghost" onclick="snapFinance()">📸 Enregistrer un instantané</button>
+      <button class="btn subtle" onclick="document.getElementById('finAddForm').style.display=document.getElementById('finAddForm').style.display==='none'?'block':'none'">+ Ajouter à la main</button>
+    </div>
+    <div class="card" id="finAddForm" style="display:none;margin-top:10px">
+      <input id="accName" placeholder="Nom (ex. Livret A, Binance…)" maxlength="30">
+      <div class="row" style="margin-top:8px">
+        <input id="accAmount" type="number" inputmode="decimal" placeholder="Montant €">
+        <select id="accCat">${FINCATS.map(c=>`<option value="${c.k}">${c.l}</option>`).join("")}</select>
+      </div>
+      <button class="btn full" style="margin-top:8px" onclick="addAccount()">Ajouter</button>
+    </div>
+    ${accounts.length?`<h2 class="section-title">Tes comptes</h2><div class="card">${accHtml}</div>`:`<div class="card dim" style="margin-top:10px">Aucun compte. Importe une capture ou ajoute-les à la main.</div>`}
+    ${hist?`<h2 class="section-title">Historique</h2><div class="card">${hist}</div>`:""}
+  `;
+}
+function pickFinanceShot(){
+  if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages ⚙️");go("settings");return;}
+  document.getElementById("financeFile").click();
+}
 
 function renderAll(){renderHome();renderHabits();renderSessions();renderGoals();renderEntries();renderHealth();renderGeminiStatus();renderQuiz();}
 
@@ -1806,7 +1980,7 @@ function pushNow(){
     .catch(e=>{console.error(e);setCloudDot("err","Erreur sync");});
   if(typeof syncProfile==="function")syncProfile();
 }
-function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[],settings:d.settings||{},quiz:d.quiz||null,social:d.social||null};}
+function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[],settings:d.settings||{},quiz:d.quiz||null,social:d.social||null,finance:d.finance||null};}
 
 /* ---- auth actions ---- */
 function authErr(e){
