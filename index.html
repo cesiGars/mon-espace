@@ -261,6 +261,9 @@
   .hcell .hv{font-size:21px;font-weight:800;margin-top:3px;letter-spacing:-.01em}
   .hcell .hv small{font-size:12px;font-weight:600;color:var(--muted)}
   .hcell .hinput{margin-top:5px;width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:18px;font-weight:800;background:#fff;text-align:left}
+  .htime{display:flex;align-items:center;gap:5px;margin-top:5px}
+  .htime .hinput{width:52px;text-align:center;padding:8px 4px;margin-top:0}
+  .hunit{font-size:12px;color:var(--muted);font-weight:700}
   .health-hint{color:var(--muted);font-size:13px;line-height:1.5}
   .health-date{font-size:12px;color:var(--muted);margin-top:10px}
 
@@ -720,11 +723,15 @@ function weekStreak(h){
   return s;
 }
 function streakUnit(h){return h.freq==="weekly"?"sem":"j";}
-// pour les mauvaises habitudes : jours d'affilée SANS la faire
+// pour les mauvaises habitudes : jours SANS craquer, depuis la création (ou depuis le dernier craquage)
 function cleanStreak(h){
-  let s=0;const d=new Date();
-  while(!h.done[todayKey(d)]){s++;d.setDate(d.getDate()-1);if(s>3650)break;}
-  return s;
+  const created=h.created||todayKey();
+  const keys=Object.keys(h.done||{});
+  let lastSlip=null;
+  keys.forEach(k=>{if(lastSlip===null||k>lastSlip)lastSlip=k;});
+  const from=lastSlip||created;
+  let days=daysBetween(from,todayKey());
+  return days<0?0:days;
 }
 function last7(h){
   const out=[];const d=new Date();d.setDate(d.getDate()-6);
@@ -740,13 +747,13 @@ function renderHabits(){
     const emo=h.emoji?`<button class="hemoji" onclick="openEmoji('${h.id}')">${h.emoji}</button>`:`<button class="hemoji empty" onclick="openEmoji('${h.id}')">＋</button>`;
     const sicon=STATICON[h.stat||"disc"];
     if(h.bad){
-      const cs=cleanStreak(h);
+      const cs=cleanStreak(h);const cracked=!!h.done[todayKey()];
       return `<div class="habit">
         <div class="check bad ${done?'done':''}" onclick="toggleHabit('${h.id}')" title="Coche si tu as craqué">${done?'✕':''}</div>
         <div class="name">
           <span class="hname">${emo}${esc(h.name)} <span class="htag stat" title="Abîme cette stat">${sicon}</span><span class="htag bad">à éviter</span></span>
           ${h.note?`<small>${esc(h.note)}</small>`:''}
-          <div class="hsub"><span class="streak ${cs?'':'zero'}">${cs?'🛡️ '+cs+' j sans':'craqué aujourd\'hui'}</span></div>
+          <div class="hsub"><span class="streak ${cracked?'zero':''}">${cracked?'😬 craqué aujourd\'hui':'🛡️ '+cs+' j sans'}</span></div>
         </div>
         <div class="adh" style="background:${adhColor(r)}" title="% de jours évités (30j)">${pc}%</div>
         <button class="iconbtn" onclick="delHabit('${h.id}')">✕</button>
@@ -950,10 +957,10 @@ function renderHome(){
     hh.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <strong>Habitudes du jour</strong>${ring}</div>`+
       DB.habits.map(h=>{const done=habitDone(h);
-        if(h.bad){const cs=cleanStreak(h);return `<div class="habit">
+        if(h.bad){const cs=cleanStreak(h);const cracked=!!h.done[todayKey()];return `<div class="habit">
           <div class="check bad ${done?'done':''}" onclick="toggleHabit('${h.id}')">${done?'✕':''}</div>
           <div class="name">${h.emoji?h.emoji+' ':''}${esc(h.name)} <span class="htag bad">à éviter</span></div>
-          <div class="streak ${cs?'':'zero'}">${cs?'🛡️ '+cs+' j':'craqué'}</div></div>`;}
+          <div class="streak ${cracked?'zero':''}">${cracked?'😬':'🛡️ '+cs+' j'}</div></div>`;}
         const wk=h.freq==="weekly"?'<span class="htag">hebdo</span>':'';return `<div class="habit">
         <div class="check ${done?'done':''}" onclick="toggleHabit('${h.id}')">${done?'✓':''}</div>
         <div class="name">${h.emoji?h.emoji+' ':''}${esc(h.name)} ${wk}</div>
@@ -1220,33 +1227,57 @@ function renderGameHome(){
 function num(v){return (v===undefined||v===null||v==="")?null:Number(v);}
 const HFIELDS=[
   {k:"steps",ic:"👟",l:"Pas",fl:false},
-  {k:"sleepHours",ic:"😴",l:"Sommeil (h)",fl:true},
+  {k:"sleepHours",ic:"😴",l:"Sommeil",time:true},
   {k:"workoutCount",ic:"🏋️",l:"Séances",fl:false},
   {k:"restingHR",ic:"❤️",l:"FC repos",fl:false},
   {k:"activeCalories",ic:"🔥",l:"Calories",fl:false},
-  {k:"screenMinutes",ic:"📱",l:"Écran (min)",fl:false}
+  {k:"screenMinutes",ic:"📱",l:"Écran",time:true}
 ];
 function healthVal(f){const h=HEALTH[todayKey()]||{};const v=num(h[f]);return (v===null||v===undefined||isNaN(v))?"":v;}
+function healthTimeParts(field){
+  const v=num((HEALTH[todayKey()]||{})[field]);
+  if(v===null||v===undefined||isNaN(v))return {h:"",m:""};
+  if(field==="sleepHours"){const H=Math.floor(v);return {h:H,m:Math.round((v-H)*60)};}
+  const H=Math.floor(v/60);return {h:H,m:Math.round(v%60)}; // screenMinutes
+}
 function renderHealth(){
   const el=document.getElementById("homeHealth");if(!el)return;
   el.innerHTML=`<div class="health-grid">`+
-    HFIELDS.map(x=>`<div class="hcell">
-      <div class="hl">${x.ic} ${x.l}</div>
-      <input class="hinput" type="number" inputmode="${x.fl?'decimal':'numeric'}" placeholder="—" value="${healthVal(x.k)}" onchange="setHealth('${x.k}',this.value,${x.fl})">
-    </div>`).join("")+
+    HFIELDS.map(x=>{
+      if(x.time){const p=healthTimeParts(x.k);
+        return `<div class="hcell"><div class="hl">${x.ic} ${x.l}</div>
+          <div class="htime">
+            <input class="hinput timeh" type="number" inputmode="numeric" min="0" placeholder="0" value="${p.h}" onchange="setHealthTime('${x.k}',this)"><span class="hunit">h</span>
+            <input class="hinput timem" type="number" inputmode="numeric" min="0" max="59" placeholder="00" value="${p.m}" onchange="setHealthTime('${x.k}',this)"><span class="hunit">min</span>
+          </div></div>`;}
+      return `<div class="hcell"><div class="hl">${x.ic} ${x.l}</div>
+        <input class="hinput" type="number" inputmode="numeric" placeholder="—" value="${healthVal(x.k)}" onchange="setHealth('${x.k}',this.value,${!!x.fl})"></div>`;
+    }).join("")+
     `</div>
     <button class="btn full" style="margin-top:12px" onclick="pickHealthShot()">📷 Importer depuis une capture (IA)</button>
     <div class="health-hint" style="margin-top:10px">Saisis tes chiffres à la main, ou prends une capture (Temps d'écran, Santé…) et laisse l'IA les remplir. Synchro entre tes appareils incluse.</div>`;
 }
-function setHealth(field,val,isFloat){
+function setHealthRaw(field,v){
   const tk=todayKey();HEALTH[tk]=HEALTH[tk]||{};
-  const raw=(val+"").trim().replace(",",".");
-  let v=isFloat?parseFloat(raw):parseInt(raw,10);
-  const empty=(raw===""||isNaN(v));
+  const empty=(v===null||v===undefined||isNaN(v));
   if(empty)delete HEALTH[tk][field];else HEALTH[tk][field]=v;
   localStorage.setItem("me-health",JSON.stringify(HEALTH));
   if(cloud.uid){try{firebase.firestore().collection("health").doc(cloud.uid).collection("days").doc(tk).set({[field]:empty?null:v},{merge:true});}catch(e){}}
-  evalAutoGoals();renderGoals();renderHome();renderHealth();
+  evalAutoGoals();renderGoals();renderHome(); // pas de renderHealth ici (évite de perdre le focus de saisie)
+}
+function setHealth(field,val,isFloat){
+  const raw=(val+"").trim().replace(",",".");
+  let v=isFloat?parseFloat(raw):parseInt(raw,10);
+  setHealthRaw(field,(raw===""||isNaN(v))?null:v);
+}
+function setHealthTime(field,el){
+  const cell=el.closest(".hcell");if(!cell)return;
+  const hEl=cell.querySelector(".timeh"),mEl=cell.querySelector(".timem");
+  const hStr=(hEl.value||"").trim(),mStr=(mEl.value||"").trim();
+  if(hStr===""&&mStr===""){setHealthRaw(field,null);return;}
+  const hh=parseInt(hStr,10)||0,mm=parseInt(mStr,10)||0;
+  const v=field==="sleepHours"?(hh+mm/60):(hh*60+mm);
+  setHealthRaw(field,v);
 }
 
 /* ---- Import par capture d'écran (Gemini Vision) ---- */
