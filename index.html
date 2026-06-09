@@ -290,6 +290,7 @@
   .lb-row:last-child{border-bottom:none}
   .lb-row.me{background:var(--accent-soft);border-radius:10px;padding:9px 10px;border-bottom:none}
   .lb-rank{width:24px;height:24px;border-radius:50%;background:#eef1f8;display:grid;place-items:center;font-weight:800;font-size:12px;flex:none}
+  .lb-av{width:38px;height:38px;border-radius:50%;object-fit:cover;flex:none;background:#eef1f8}
   .lb-row.me .lb-rank{background:var(--accent);color:#fff}
   .lb-name{flex:1;font-weight:600;font-size:14px}
   .lb-lvl{font-size:11px;font-weight:700;color:var(--muted);background:#eef1f8;padding:1px 7px;border-radius:20px}
@@ -362,6 +363,7 @@
     <div class="hero" id="homeScore"></div>
     <h2 class="section-title">Ton avatar</h2>
     <div class="dash-card" id="homeAvatar"></div>
+    <input type="file" id="selfieFile" accept="image/*" capture="user" style="display:none" onchange="onSelfie(event)">
     <h2 class="section-title">Ton élan</h2>
     <div class="dash-card" id="homeMomentum"></div>
     <h2 class="section-title">Tes stats de vie</h2>
@@ -1262,18 +1264,71 @@ function avatarImgFail(img,idx){
   if(n<AV_EXTS.length){img.dataset.exti=n;img.src="avatar"+idx+"."+AV_EXTS[n];}
   else{img.style.display="none";const f=document.getElementById("avatarFallback");if(f)f.style.display="block";}
 }
+
+/* ---- avatar perso généré par IA (Gemini image) ---- */
+const GEMINI_IMG_MODEL="gemini-2.5-flash-image";
+const AVA_DESC=[
+  "très maigre, presque aucun muscle, l'air fatigué, sans haltère",
+  "maigre, débutant, tenant un mini haltère de 1 kg",
+  "légèrement tonique, déterminé, avec un haltère de 2 kg",
+  "un peu musclé, motivé, avec un haltère de 10 kg",
+  "en bonne forme, musclé, avec des haltères de 20 kg",
+  "costaud, bien musclé, soulevant un gros haltère doré",
+  "très musclé facon surhumain, bras puissants",
+  "musculature cosmique, bras qui brillent comme une galaxie étoilée",
+  "corps lumineux fait de galaxies, torse étoilé, aura puissante",
+  "dieu cosmique ultra-musclé, lumière divine, physique parfait"
+];
+function buildAvatarPrompt(lvl){
+  return "Transforme le visage de la personne sur cette photo en un personnage de dessin animé (style cartoon : gros contour noir épais, couleurs plates, décor de cuisine simple), en gardant clairement sa ressemblance et sa coupe de cheveux. Le personnage est "+AVA_DESC[Math.max(0,Math.min(9,lvl-1))]+". Cadrage poitrine, expression confiante, vertical. Aucune écriture sur l'image.";
+}
+function geminiImageCall(parts){
+  return fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMG_MODEL}:generateContent?key=${encodeURIComponent(geminiKey())}`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({contents:[{parts}]})
+  }).then(r=>r.json()).then(j=>{
+    if(j.error)throw new Error(j.error.message||"Erreur image");
+    const ps=(j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[];
+    const im=ps.find(p=>p.inlineData||p.inline_data);
+    if(!im)throw new Error("Aucune image renvoyée");
+    return (im.inlineData||im.inline_data).data;
+  });
+}
+function downscaleB64(b64,maxW){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{let w=img.width,h=img.height;if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);try{res(c.toDataURL("image/jpeg",0.82).split(",")[1]);}catch(e){rej(e);}};img.onerror=rej;img.src="data:image/jpeg;base64,"+b64;});}
+function pickSelfie(){if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages ⚙️");go("settings");return;}document.getElementById("selfieFile").click();}
+function onSelfie(ev){const f=ev.target.files[0];ev.target.value="";if(!f)return;toast("Préparation du selfie…");resizeImg(f,420).then(b64=>{DB.settings=DB.settings||{};DB.settings.selfie=b64;save();doGenerateAvatar();}).catch(()=>toast("Image illisible"));}
+function updateAvatarFromSelfie(){doGenerateAvatar();}
+function doGenerateAvatar(){
+  const s=DB.settings||{};if(!s.selfie){toast("Prends d'abord un selfie");return;}
+  if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages");go("settings");return;}
+  const lvl=avatarTier(Math.round(totalPower()))+1;
+  toast("Génération de ton avatar… 🎨 (~30s)");
+  geminiImageCall([{text:buildAvatarPrompt(lvl)},{inline_data:{mime_type:"image/jpeg",data:s.selfie}}])
+    .then(b64=>downscaleB64(b64,460))
+    .then(small=>{DB.settings.avatarImg="data:image/jpeg;base64,"+small;DB.settings.avatarImgLevel=lvl;save();if(typeof syncProfile==="function")syncProfile();renderAvatar();toast("Avatar créé ✨");})
+    .catch(e=>{console.error(e);let m=(e&&e.message)||"";
+      if(/billing|quota|PERMISSION|not enabled|FAILED_PRECONDITION|403/i.test(m))m="Génération d'images = facturation à activer sur ton compte Google (~0,04€/image).";
+      else if(/not found|404|not supported/i.test(m))m="Modèle image indisponible.";
+      toast("Échec : "+m.slice(0,90));});
+}
 function renderAvatar(){
   const el=document.getElementById("homeAvatar");if(!el)return;
-  const p=Math.round(totalPower());const i=avatarTier(p);const t=AVATARS[i];const next=AVATARS[i+1];
+  const p=Math.round(totalPower());const i=avatarTier(p);const t=AVATARS[i];const next=AVATARS[i+1];const lvl=i+1;
+  const s=DB.settings||{};
   let prog;
   if(next){
     const span=next.min-t.min,into=p-t.min;const pct=Math.max(0,Math.min(100,Math.round(into/span*100)));
-    prog=`<div class="avatar-sub">Niveau ${i+1}/${AVATARS.length} · ${p} pts · encore ${next.min-p} pts pour « ${next.name} »</div><div class="avatar-bar"><div style="width:${pct}%"></div></div>`;
+    prog=`<div class="avatar-sub">Niveau ${lvl}/${AVATARS.length} · ${p} pts · encore ${next.min-p} pts pour « ${next.name} »</div><div class="avatar-bar"><div style="width:${pct}%"></div></div>`;
   }else{prog=`<div class="avatar-sub">Niveau MAX 👑 · ${p} pts — t'es au sommet.</div>`;}
-  el.innerHTML=`<img class="avatar-img" src="avatar${i+1}.png" alt="avatar niveau ${i+1}" onerror="avatarImgFail(this,${i+1})">
-    <div id="avatarFallback" style="display:none" class="health-hint">Ajoute tes images <b>avatar1.png … avatar${AVATARS.length}.png</b> dans ton dépôt GitHub (même dossier que index.html) pour voir ton perso évoluer.</div>
-    <div class="avatar-name">${t.name}${i===AVATARS.length-1?' 👑':''}</div>
-    ${prog}`;
+  let imgTag;
+  if(s.avatarImg){imgTag=`<img class="avatar-img" src="${s.avatarImg}" alt="ton avatar">`;}
+  else{imgTag=`<img class="avatar-img" src="avatar${lvl}.png" alt="avatar niveau ${lvl}" onerror="avatarImgFail(this,${lvl})">
+    <div id="avatarFallback" style="display:none" class="health-hint">Ajoute tes images <b>avatar1.png … avatar${AVATARS.length}.png</b> dans ton dépôt, ou génère ton avatar perso ci-dessous 👇</div>`;}
+  const needUpdate=s.avatarImg&&s.selfie&&s.avatarImgLevel&&s.avatarImgLevel<lvl;
+  const btns=`<div class="row" style="margin-top:12px;justify-content:center">
+    <button class="btn ghost sm" onclick="pickSelfie()">📸 ${s.avatarImg?'Nouveau selfie':'Avatar perso (selfie)'}</button>
+    ${needUpdate?`<button class="btn sm" onclick="updateAvatarFromSelfie()">✨ Évoluer (niv ${lvl})</button>`:''}</div>`;
+  el.innerHTML=imgTag+`<div class="avatar-name">${t.name}${i===AVATARS.length-1?' 👑':''}</div>${prog}${btns}`;
 }
 
 function renderGameHome(){
@@ -1610,7 +1665,7 @@ function codeFromUid(uid){
 function myCode(){return cloud.uid?codeFromUid(cloud.uid):"";}
 function fs(){return firebase.firestore();}
 function myLevel(){return avatarTier(totalPower())+1;}
-function myProfilePayload(){const s=SOC();return {name:s.name||"Anonyme",code:myCode(),avatarLevel:myLevel(),score:dayScore(),updatedAt:Date.now()};}
+function myProfilePayload(){const s=SOC();return {name:s.name||"Anonyme",code:myCode(),avatarLevel:myLevel(),score:dayScore(),avatarImg:(DB.settings&&DB.settings.avatarImg)||null,updatedAt:Date.now()};}
 let profileT=null;
 function syncProfile(){
   if(!cloud.uid||typeof firebase==="undefined")return;
@@ -1659,15 +1714,16 @@ function removeFriend(uid){
 }
 function renderLeaderboard(){
   const el=document.getElementById("leaderboard");if(!el)return;
-  const s=SOC();const me={name:(s.name||"Toi")+" (toi)",score:dayScore(),level:myLevel(),me:true};
+  const s=SOC();const me={name:(s.name||"Toi")+" (toi)",score:dayScore(),level:myLevel(),avatarImg:(DB.settings&&DB.settings.avatarImg)||null,me:true};
   const friends=s.friends||[];
   if(!cloud.uid){el.innerHTML='<div class="dim">Connecte-toi (Réglages) pour activer le classement.</div>';return;}
   Promise.all(friends.map(f=>fs().collection("profiles").doc(f.uid).get()
-    .then(d=>d.exists?{name:(d.data().name||f.name),score:d.data().score||0,level:d.data().avatarLevel||1}:{name:f.name,score:0,level:1})
-    .catch(()=>({name:f.name,score:0,level:1})))).then(arr=>{
+    .then(d=>d.exists?{name:(d.data().name||f.name),score:d.data().score||0,level:d.data().avatarLevel||1,avatarImg:d.data().avatarImg||null}:{name:f.name,score:0,level:1,avatarImg:null})
+    .catch(()=>({name:f.name,score:0,level:1,avatarImg:null})))).then(arr=>{
     const all=[me,...arr].sort((a,b)=>b.score-a.score);
     el.innerHTML=all.map((u,i)=>`<div class="lb-row ${u.me?'me':''}">
       <div class="lb-rank">${i+1}</div>
+      ${u.avatarImg?`<img class="lb-av" src="${u.avatarImg}" alt="">`:`<div class="lb-av" style="display:grid;place-items:center;font-size:15px">${["😴","🥱","🙂","💪","🔥","🏋️","🦾","✨","🌌","👑"][Math.max(0,Math.min(9,u.level-1))]}</div>`}
       <div class="lb-name">${esc(u.name)} <span class="lb-lvl">Niv.${u.level}</span></div>
       <div class="lb-score">${u.score}<small>/100</small></div></div>`).join("");
   }).catch(()=>{el.innerHTML='<div class="dim">Classement indisponible.</div>';});
@@ -1938,12 +1994,21 @@ function onLoggedIn(u){
     // ignorer l'écho de nos propres écritures locales
     if(snap.metadata.hasPendingWrites){setCloudDot("on","Synchronisé");return;}
     if(snap.exists && snap.data() && snap.data().db){
-      DB=normalize(snap.data().db);
+      DB=normalize(snap.data().db);DB.ownerUid=cloud.uid;
       localStorage.setItem(KEY,JSON.stringify(DB));
       renderAll();renderCloudUI();
       setCloudDot("on","Synchronisé");
     }else if(!cloud.gotFirst){
-      // pas encore de données cloud -> on envoie celles de cet appareil
+      if(DB.ownerUid && DB.ownerUid!==cloud.uid){
+        // nouveau compte sans données cloud -> on repart de zéro (on garde la clé Gemini)
+        const keep=DB.settings||{};
+        DB={habits:[],sessions:[],goals:[],entries:[],settings:keep,quiz:null,social:null,finance:null,ownerUid:cloud.uid};
+        HEALTH={};localStorage.setItem("me-health","{}");
+        localStorage.setItem(KEY,JSON.stringify(DB));
+        renderAll();renderCloudUI();
+      }else{
+        DB.ownerUid=cloud.uid;
+      }
       pushNow();
     }
     cloud.gotFirst=true;
