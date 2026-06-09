@@ -332,9 +332,53 @@
   .snap-row:last-child{border-bottom:none}
   .snap-up{color:#1e7a52;font-weight:700}
   .snap-down{color:#c0392b;font-weight:700}
+  /* écran de verrouillage */
+  .gate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:24px;
+    background:linear-gradient(160deg,#eaf0ff,#f4f7fc);}
+  .gate-card{background:var(--card);border:1px solid var(--line);border-radius:22px;
+    padding:30px 24px;max-width:340px;width:100%;text-align:center;
+    box-shadow:0 20px 60px rgba(37,99,235,.18);}
+  .gate-title{font-size:21px;font-weight:800;letter-spacing:-.01em;margin:0}
+  .gate-sub{color:var(--muted);font-size:13.5px;margin:6px 0 18px}
+  .gate-card input{width:100%;text-align:center;font-size:20px;letter-spacing:.18em;
+    padding:13px;border:1px solid var(--line);border-radius:13px;background:var(--bg);margin-bottom:10px}
+  .gate-err{color:#c0392b;font-size:13px;font-weight:600;min-height:18px;margin-bottom:8px}
+  /* chips d'exercices */
+  .exchip{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent);
+    border-radius:999px;padding:5px 10px;font-size:13px;font-weight:600;margin:0 6px 6px 0}
+  .exchip button{border:none;background:transparent;color:var(--accent);font-size:13px;cursor:pointer;padding:0;line-height:1;opacity:.7}
+  .exchip button:hover{opacity:1}
+  #progEx{width:100%}
 </style>
 </head>
 <body>
+<!-- ===== Écran de verrouillage (code d'accès) ===== -->
+<div id="gate" class="gate">
+  <div class="gate-card">
+    <svg width="56" height="56" viewBox="0 0 512 512" style="border-radius:14px;margin-bottom:14px" aria-hidden="true">
+      <defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+      <rect width="512" height="512" rx="116" fill="url(#gg)"/>
+      <circle cx="256" cy="256" r="138" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="34"/>
+      <path d="M256 118 a138 138 0 0 1 138 138" fill="none" stroke="#fff" stroke-width="34" stroke-linecap="round"/>
+      <path d="M198 262 l40 42 l78 -92" fill="none" stroke="#fff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div id="gateCode">
+      <h2 class="gate-title">Espace privé 🔒</h2>
+      <p class="gate-sub">Entre ton code d'accès pour ouvrir Mon Espace.</p>
+      <input id="gateInput" type="password" inputmode="numeric" autocomplete="off" placeholder="Code d'accès"
+        onkeydown="if(event.key==='Enter')gateSubmit()">
+      <div id="gateErr" class="gate-err"></div>
+      <button class="btn full" onclick="gateSubmit()">Déverrouiller</button>
+    </div>
+    <div id="gateName" style="display:none">
+      <h2 class="gate-title">Bienvenue 👋</h2>
+      <p class="gate-sub">Comment tu t'appelles ? L'app te dira bonjour par ton prénom.</p>
+      <input id="gateNameInput" type="text" autocomplete="off" placeholder="Ton prénom" style="letter-spacing:normal;font-size:17px"
+        onkeydown="if(event.key==='Enter')saveGateName()">
+      <button class="btn full" onclick="saveGateName()">C'est parti</button>
+    </div>
+  </div>
+</div>
 <div class="wrap">
   <header class="top">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
@@ -437,6 +481,7 @@
 
   <!-- MUSCU -->
   <section class="view" id="view-gym">
+    <datalist id="exDatalist"></datalist>
     <h2 class="section-title">Nouvelle séance</h2>
     <div class="card">
       <div class="row">
@@ -444,11 +489,29 @@
         <div style="flex:2"><label class="fld">Nom de la séance</label><input id="wName" placeholder="ex. Push / Pull / Jambes"></div>
       </div>
       <hr class="sep">
-      <label class="fld">Exercices</label>
+      <label class="fld">Exercices <span class="dim" style="font-weight:400">— choisis dans ta liste ou tape un nouveau</span></label>
       <div id="exRows"></div>
       <button class="btn ghost sm" onclick="addExRow()">+ Exercice</button>
       <button class="btn full" style="margin-top:12px" onclick="saveSession()">Enregistrer la séance</button>
     </div>
+
+    <h2 class="section-title">Mes exercices</h2>
+    <div class="card">
+      <p class="dim" style="margin-top:0">Crée tes exercices une fois — ensuite tu les choisis dans la liste sans les réécrire.</p>
+      <div class="row">
+        <input id="newExName" placeholder="ex. Développé couché" autocomplete="off" style="flex:1">
+        <button class="btn ghost sm" onclick="addExercise()">+ Ajouter</button>
+      </div>
+      <div id="exLib" style="margin-top:10px"></div>
+    </div>
+
+    <h2 class="section-title">Progression 📈</h2>
+    <div class="card">
+      <label class="fld">Exercice</label>
+      <select id="progEx" onchange="renderProgress()"></select>
+      <div id="progChart" style="margin-top:12px"></div>
+    </div>
+
     <h2 class="section-title">Historique</h2>
     <div class="card" id="sessionList"></div>
   </section>
@@ -529,6 +592,23 @@
         <div class="dim" id="syncInfo" style="margin-bottom:10px">Synchro active ✓</div>
         <button class="btn subtle sm" onclick="cloudLogout()">Se déconnecter</button>
       </div>
+    </div>
+
+    <h2 class="section-title">Ton prénom</h2>
+    <div class="card">
+      <strong>Personnalise l'accueil</strong>
+      <p class="dim" style="margin-top:4px">L'app te dit bonjour par ton prénom.</p>
+      <input id="setName" type="text" placeholder="Ton prénom" autocomplete="off">
+      <button class="btn full" style="margin-top:8px" onclick="saveSetName()">Enregistrer</button>
+    </div>
+
+    <h2 class="section-title">Code d'accès 🔒</h2>
+    <div class="card">
+      <strong>Verrouille l'ouverture de l'app</strong>
+      <p class="dim" style="margin-top:4px">Un code à entrer pour ouvrir Mon Espace. Tu le choisis, et tu peux le changer quand tu veux. Si tu es connecté à ton compte, le nouveau code s'applique sur <b>tous tes appareils</b> (ils redemanderont le code).</p>
+      <input id="newAccessCode" type="password" inputmode="numeric" placeholder="Nouveau code d'accès" autocomplete="off">
+      <button class="btn full" style="margin-top:8px" onclick="changeAccessCode()">Enregistrer le code</button>
+      <div id="accessMsg" class="dim" style="margin-top:8px"></div>
     </div>
 
     <h2 class="section-title">Import par capture (IA)</h2>
@@ -638,10 +718,21 @@ const BAKED_CONFIG = {
 const KEY="mon-espace-v1";
 let DB=load();
 function load(){
-  try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);d.settings=d.settings||{};d.quiz=d.quiz||null;d.social=d.social||null;d.finance=d.finance||null;return d;}}catch(e){}
-  return {habits:[],sessions:[],goals:[],entries:[],settings:{},quiz:null,social:null,finance:null};
+  try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);d.settings=d.settings||{};d.quiz=d.quiz||null;d.social=d.social||null;d.finance=d.finance||null;d.exercises=d.exercises||[];return d;}}catch(e){}
+  return {habits:[],sessions:[],goals:[],entries:[],settings:{},quiz:null,social:null,finance:null,exercises:[]};
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(DB));pushCloud();}
+/* espace vide : on ne garde QUE la clé Gemini (pas le selfie/avatar, qui appartiennent au compte) */
+function blankDB(){
+  const gk=(typeof DB!=="undefined"&&DB.settings&&DB.settings.geminiKey)||localStorage.getItem("me-gemini-key")||"";
+  return {habits:[],sessions:[],goals:[],entries:[],settings:gk?{geminiKey:gk}:{},quiz:null,social:null,finance:null,exercises:[],ownerUid:null};
+}
+/* remet l'espace local à zéro (mémoire + localStorage) pour un autre compte */
+function wipeLocal(){
+  DB=blankDB();HEALTH={};
+  localStorage.setItem(KEY,JSON.stringify(DB));
+  localStorage.setItem("me-health","{}");
+}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 
 /* ---------- dates ---------- */
@@ -847,7 +938,7 @@ function addExRow(name="",w="",s="",r=""){
   const wrap=document.getElementById("exRows");
   const div=document.createElement("div");
   div.className="exline";
-  div.innerHTML=`<input class="exn" placeholder="Exercice" value="${esc(name)}">
+  div.innerHTML=`<input class="exn" list="exDatalist" placeholder="Exercice" value="${esc(name)}">
     <input class="w" type="number" inputmode="decimal" placeholder="kg" value="${w}">
     <input class="s" type="number" inputmode="numeric" placeholder="séries" value="${s}">
     <input class="r" type="number" inputmode="numeric" placeholder="reps" value="${r}">
@@ -864,6 +955,7 @@ function saveSession(){
     r:l.querySelector(".r").value
   })).filter(e=>e.name);
   if(!ex.length){toast("Ajoute au moins un exercice");return;}
+  ex.forEach(e=>rememberExercise(e.name));
   DB.sessions.push({id:uid(),date,name,ex});
   save();
   document.getElementById("wName").value="";
@@ -898,7 +990,89 @@ function renderSessions(){
       <table class="ex"><tr><th>Exercice</th><th style="text-align:center">kg</th><th style="text-align:center">séries</th><th style="text-align:center">reps</th></tr>${rows}</table>
     </div>`;
   }).join('<hr class="sep">');
+  renderGymExtras();
 }
+
+/* ---- bibliothèque d'exercices + progression ---- */
+function normEx(s){return (s||"").trim();}
+function rememberExercise(name){
+  name=normEx(name);if(!name)return;
+  DB.exercises=DB.exercises||[];
+  if(!DB.exercises.some(x=>x.toLowerCase()===name.toLowerCase()))DB.exercises.push(name);
+}
+// tous les noms connus : bibliothèque + ceux déjà utilisés dans l'historique, dédupliqués
+function exerciseNames(){
+  const map=new Map();
+  (DB.exercises||[]).forEach(n=>{n=normEx(n);if(n)map.set(n.toLowerCase(),n);});
+  (DB.sessions||[]).forEach(s=>(s.ex||[]).forEach(e=>{const n=normEx(e.name);if(n&&!map.has(n.toLowerCase()))map.set(n.toLowerCase(),n);}));
+  return [...map.values()].sort((a,b)=>a.localeCompare(b,"fr"));
+}
+function addExercise(){
+  const i=document.getElementById("newExName");const v=normEx(i&&i.value);
+  if(!v){toast("Donne un nom d'exercice");return;}
+  if((DB.exercises||[]).some(x=>x.toLowerCase()===v.toLowerCase())){toast("Déjà dans ta liste");return;}
+  rememberExercise(v);save();if(i)i.value="";renderGymExtras();toast("Exercice ajouté 💪");
+}
+function delExercise(name){
+  DB.exercises=(DB.exercises||[]).filter(x=>x.toLowerCase()!==name.toLowerCase());
+  save();renderGymExtras();
+}
+function renderExDatalist(){
+  const dl=document.getElementById("exDatalist");if(!dl)return;
+  dl.innerHTML=exerciseNames().map(n=>`<option value="${esc(n)}">`).join("");
+}
+function renderExLib(){
+  const el=document.getElementById("exLib");if(!el)return;
+  const lib=(DB.exercises||[]);
+  if(!lib.length){el.innerHTML='<div class="dim">Aucun exercice créé pour l\'instant. Ajoute-en, ou ils se créent tout seuls quand tu enregistres une séance.</div>';return;}
+  el.innerHTML=[...lib].sort((a,b)=>a.localeCompare(b,"fr")).map(n=>
+    `<span class="exchip">${esc(n)} <button data-ex="${esc(n)}" onclick="delExercise(this.dataset.ex)" title="Retirer">✕</button></span>`).join("");
+}
+function renderProgress(){
+  const sel=document.getElementById("progEx");const box=document.getElementById("progChart");
+  if(!sel||!box)return;
+  const names=exerciseNames();
+  const cur=sel.value;
+  sel.innerHTML=names.length?names.map(n=>`<option ${n===cur?'selected':''}>${esc(n)}</option>`).join(""):'<option value="">—</option>';
+  const ex=sel.value||names[0]||"";
+  if(!ex){box.innerHTML='<div class="dim">Enregistre des séances pour voir ta progression.</div>';return;}
+  // max kg par date pour cet exercice
+  const byDate={};
+  (DB.sessions||[]).forEach(s=>(s.ex||[]).forEach(e=>{
+    if(normEx(e.name).toLowerCase()!==ex.toLowerCase())return;
+    const w=parseFloat(e.w);if(isNaN(w))return;
+    if(byDate[s.date]==null||w>byDate[s.date])byDate[s.date]=w;
+  }));
+  const pts=Object.keys(byDate).sort().map(d=>({date:d,w:byDate[d]}));
+  if(pts.length<2){box.innerHTML='<div class="dim">Pas encore assez de données pour cet exercice (il faut au moins 2 séances avec un poids).</div>';return;}
+  box.innerHTML=lineChart(pts);
+}
+function lineChart(pts){
+  const W=320,H=150,pl=34,pr=10,pt=12,pb=22;
+  const ws=pts.map(p=>p.w);let mn=Math.min(...ws),mx=Math.max(...ws);
+  if(mn===mx){mn=mn-1;mx=mx+1;}
+  const n=pts.length;
+  const X=i=>pl+(n===1?0:(W-pl-pr)*i/(n-1));
+  const Y=w=>pt+(H-pt-pb)*(1-(w-mn)/(mx-mn));
+  const line=pts.map((p,i)=>(i?"L":"M")+X(i).toFixed(1)+" "+Y(p.w).toFixed(1)).join(" ");
+  const area=line+` L${X(n-1).toFixed(1)} ${(H-pb)} L${X(0).toFixed(1)} ${(H-pb)} Z`;
+  const dots=pts.map((p,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(p.w).toFixed(1)}" r="3" fill="#2563eb"/>`).join("");
+  // labels y : min et max
+  const yl=[mx,mn].map(v=>`<text x="2" y="${(v===mx?pt+4:H-pb).toFixed(0)}" font-size="9" fill="#9aa3b2">${v}</text>`).join("");
+  // labels x : première et dernière date
+  const fmt=d=>{const p=d.split("-");return p[2]+"/"+p[1];};
+  const xl=`<text x="${pl}" y="${H-6}" font-size="9" fill="#9aa3b2">${fmt(pts[0].date)}</text>`+
+           `<text x="${W-pr}" y="${H-6}" font-size="9" fill="#9aa3b2" text-anchor="end">${fmt(pts[n-1].date)}</text>`;
+  const first=pts[0].w,last=pts[n-1].w,diff=last-first;
+  const badge=`<div style="text-align:center;margin-top:8px;font-size:13px"><b>${last} kg</b> actuel · <span style="color:${diff>=0?'#1e7a52':'#c0392b'};font-weight:700">${diff>=0?'+':''}${(Math.round(diff*10)/10)} kg</span> depuis le début</div>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+    <defs><linearGradient id="pgArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2563eb" stop-opacity=".22"/><stop offset="1" stop-color="#2563eb" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#pgArea)"/>
+    <path d="${line}" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}${yl}${xl}
+  </svg>${badge}`;
+}
+function renderGymExtras(){renderExDatalist();renderExLib();renderProgress();}
 
 /* ---------- OBJECTIFS ---------- */
 function toggleAutoFields(){
@@ -1067,12 +1241,18 @@ function renderHome(){
     hf.innerHTML='<div style="margin-bottom:6px"><strong>Sur quoi je travaille</strong></div><div class="dim">Aucun objectif en cours. <a href="#" onclick="go(\'habits\');return false" style="color:var(--accent)">En ajouter un</a></div>';
   }
 }
+function userName(){return ((DB.settings&&DB.settings.name)||"").trim();}
+function renderNameSettings(){const i=document.getElementById("setName");if(i)i.value=userName();}
+function saveSetName(){
+  const i=document.getElementById("setName");const v=(i&&i.value||"").trim().slice(0,24);
+  DB.settings=DB.settings||{};DB.settings.name=v;save();renderHome();toast(v?("Salut "+v+" 👋"):"Prénom retiré");
+}
 function greeting(){
-  const h=new Date().getHours();
-  if(h<6)return "Bonne nuit, Cesar";
-  if(h<12)return "Bonjour, Cesar";
-  if(h<18)return "Bel après-midi, Cesar";
-  return "Bonsoir, Cesar";
+  const h=new Date().getHours();const n=userName();const who=n?", "+n:"";
+  if(h<6)return "Bonne nuit"+who;
+  if(h<12)return "Bonjour"+who;
+  if(h<18)return "Bel après-midi"+who;
+  return "Bonsoir"+who;
 }
 
 /* ---------- export / import ---------- */
@@ -1931,7 +2111,7 @@ function pickFinanceShot(){
   document.getElementById("financeFile").click();
 }
 
-function renderAll(){renderHome();renderHabits();renderSessions();renderGoals();renderEntries();renderHealth();renderGeminiStatus();renderQuiz();}
+function renderAll(){renderHome();renderHabits();renderSessions();renderGoals();renderEntries();renderHealth();renderGeminiStatus();renderQuiz();renderNameSettings();}
 
 /* ============================================================
    SYNCHRO CLOUD (Firebase Auth + Firestore, temps réel)
@@ -1978,6 +2158,7 @@ function initCloud(){
   try{
     firebase.initializeApp(cfg);
     cloud.ready=true;
+    if(typeof gateCloudSync==="function")gateCloudSync();
     firebase.auth().onAuthStateChanged(u=>{
       if(u){onLoggedIn(u);}else{onLoggedOut();}
       renderCloudUI();
@@ -1987,6 +2168,9 @@ function initCloud(){
 
 function onLoggedIn(u){
   cloud.uid=u.uid;cloud.gotFirst=false;
+  // isolation : si on se connecte à un AUTRE compte que le dernier propriétaire local,
+  // on vide l'écran tout de suite pour ne pas afficher/réécrire les données du précédent.
+  if(DB.ownerUid && DB.ownerUid!==u.uid){wipeLocal();renderAll();}
   setCloudDot("sync","Connexion…");
   const ref=firebase.firestore().collection("spaces").doc(u.uid);
   if(cloud.unsub)cloud.unsub();
@@ -2000,10 +2184,8 @@ function onLoggedIn(u){
       setCloudDot("on","Synchronisé");
     }else if(!cloud.gotFirst){
       if(DB.ownerUid && DB.ownerUid!==cloud.uid){
-        // nouveau compte sans données cloud -> on repart de zéro (on garde la clé Gemini)
-        const keep=DB.settings||{};
-        DB={habits:[],sessions:[],goals:[],entries:[],settings:keep,quiz:null,social:null,finance:null,ownerUid:cloud.uid};
-        HEALTH={};localStorage.setItem("me-health","{}");
+        // nouveau compte sans données cloud -> on repart de zéro (selfie/avatar inclus, on garde juste la clé Gemini)
+        wipeLocal();DB.ownerUid=cloud.uid;
         localStorage.setItem(KEY,JSON.stringify(DB));
         renderAll();renderCloudUI();
       }else{
@@ -2045,7 +2227,7 @@ function pushNow(){
     .catch(e=>{console.error(e);setCloudDot("err","Erreur sync");});
   if(typeof syncProfile==="function")syncProfile();
 }
-function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[],settings:d.settings||{},quiz:d.quiz||null,social:d.social||null,finance:d.finance||null};}
+function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[],settings:d.settings||{},quiz:d.quiz||null,social:d.social||null,finance:d.finance||null,exercises:d.exercises||[]};}
 
 /* ---- auth actions ---- */
 function authErr(e){
@@ -2072,7 +2254,7 @@ function cloudSignup(){
 }
 function cloudLogout(){
   if(!confirm("Se déconnecter de cet appareil ? (tes données restent dans le cloud)"))return;
-  firebase.auth().signOut().then(()=>toast("Déconnecté"));
+  firebase.auth().signOut().then(()=>{wipeLocal();renderAll();renderCloudUI();toast("Déconnecté");});
 }
 
 /* ---- UI synchro ---- */
@@ -2202,6 +2384,74 @@ function buildManifest(){
 buildManifest();
 document.getElementById("wDate").value=todayKey();
 addExRow();
+/* ===== Code d'accès (verrou d'ouverture) ===== */
+const GATE_DEFAULT="2468";              // code initial — change-le dans Réglages
+const GK_HASH="me-gate-hash";           // hash du code attendu (cache local)
+const GK_OK="me-gate-ok";               // "1" = cet appareil est déverrouillé
+const GK_OKHASH="me-gate-okhash";       // hash avec lequel cet appareil a été déverrouillé
+function gateHash(s){let h=5381;s=String(s);for(let i=0;i<s.length;i++)h=((h*33)^s.charCodeAt(i))>>>0;return "h"+h.toString(36);}
+function gateExpected(){return localStorage.getItem(GK_HASH)||gateHash(GATE_DEFAULT);}
+function gateShowStep(step){ // "code" | "name"
+  const g=document.getElementById("gate");if(!g)return;
+  g.style.display="grid";
+  const c=document.getElementById("gateCode"),n=document.getElementById("gateName");
+  if(c)c.style.display=(step==="name")?"none":"block";
+  if(n)n.style.display=(step==="name")?"block":"none";
+  const id=(step==="name")?"gateNameInput":"gateInput";
+  const i=document.getElementById(id);if(i){if(step!=="name")i.value="";setTimeout(()=>i.focus(),60);}
+}
+function showGate(){gateShowStep("code");}
+function hideGate(){const g=document.getElementById("gate");if(g)g.style.display="none";}
+function gateUnlocked(){return localStorage.getItem(GK_OK)==="1"&&localStorage.getItem(GK_OKHASH)===gateExpected();}
+/* après un déverrouillage : demander le prénom si pas encore défini, sinon ouvrir l'app */
+function afterUnlock(){if(!userName())gateShowStep("name");else hideGate();}
+function saveGateName(){
+  const i=document.getElementById("gateNameInput");
+  const v=(i&&i.value||"").trim().slice(0,24);
+  DB.settings=DB.settings||{};DB.settings.name=v;save();
+  hideGate();renderHome();
+}
+function gateSubmit(){
+  const i=document.getElementById("gateInput"),err=document.getElementById("gateErr");
+  const v=(i&&i.value||"").trim();
+  if(gateHash(v)===gateExpected()){
+    localStorage.setItem(GK_OK,"1");localStorage.setItem(GK_OKHASH,gateExpected());
+    if(err)err.textContent="";afterUnlock();
+  }else{if(err)err.textContent="Code incorrect";if(i){i.value="";i.focus();}}
+}
+function initGate(){if(gateUnlocked())afterUnlock();else showGate();gateCloudSync();}
+/* lit le code partagé dans le cloud (doc public meta/access) et l'applique */
+function gateCloudSync(){
+  try{
+    if(typeof firebase==="undefined"||!cloud.ready)return;
+    firebase.firestore().collection("meta").doc("access").get().then(d=>{
+      if(d&&d.exists&&d.data()&&d.data().hash){
+        const h=d.data().hash;
+        localStorage.setItem(GK_HASH,h);
+        // si le code a changé ailleurs, on reverrouille cet appareil
+        if(localStorage.getItem(GK_OK)==="1"&&localStorage.getItem(GK_OKHASH)!==h){
+          localStorage.removeItem(GK_OK);showGate();
+        }
+      }
+    }).catch(()=>{});
+  }catch(e){}
+}
+function changeAccessCode(){
+  const inp=document.getElementById("newAccessCode"),msg=document.getElementById("accessMsg");
+  const v=(inp&&inp.value||"").trim();
+  if(v.length<4){if(msg)msg.textContent="Choisis un code d'au moins 4 caractères.";return;}
+  const h=gateHash(v);
+  localStorage.setItem(GK_HASH,h);localStorage.setItem(GK_OK,"1");localStorage.setItem(GK_OKHASH,h);
+  if(inp)inp.value="";
+  if(typeof firebase!=="undefined"&&cloud.ready&&cloud.uid){
+    firebase.firestore().collection("meta").doc("access").set({hash:h,updatedAt:Date.now()})
+      .then(()=>{if(msg)msg.textContent="Code enregistré ✓ — appliqué sur tous tes appareils.";})
+      .catch(()=>{if(msg)msg.textContent="Code enregistré sur cet appareil (cloud indisponible).";});
+  }else{
+    if(msg)msg.textContent="Code enregistré sur cet appareil. Connecte-toi pour l'appliquer partout.";
+  }
+}
+
 renderAll();
 setCloudDot("off",getCfg()?"Non connecté":"Hors-ligne");
 renderCloudUI();
@@ -2209,6 +2459,7 @@ initCloud();
 renderNotifUI();
 startNotifScheduler();
 renderGeminiStatus();
+initGate();
 </script>
 </body>
 </html>
