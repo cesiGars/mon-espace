@@ -284,6 +284,29 @@
   .qopt.ok{background:#e6f7ef;border-color:#3bb273;color:#1e7a52}
   .qopt.ko{background:#fcebe9;border-color:#e2483d;color:#b3392e}
   .qexp{margin-top:11px;font-size:13px;color:#3a3833;background:#f5f7fc;border-radius:11px;padding:11px;line-height:1.5}
+
+  /* amis */
+  .lb-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line)}
+  .lb-row:last-child{border-bottom:none}
+  .lb-row.me{background:var(--accent-soft);border-radius:10px;padding:9px 10px;border-bottom:none}
+  .lb-rank{width:24px;height:24px;border-radius:50%;background:#eef1f8;display:grid;place-items:center;font-weight:800;font-size:12px;flex:none}
+  .lb-row.me .lb-rank{background:var(--accent);color:#fff}
+  .lb-name{flex:1;font-weight:600;font-size:14px}
+  .lb-lvl{font-size:11px;font-weight:700;color:var(--muted);background:#eef1f8;padding:1px 7px;border-radius:20px}
+  .lb-score{font-weight:800;font-variant-numeric:tabular-nums}
+  .lb-score small{font-size:11px;color:var(--muted);font-weight:600}
+  .ch-row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px}
+  .ch-row>span:first-child{width:64px;font-weight:600}
+  .ch-bar{flex:1;height:9px;border-radius:8px;background:#eef1f8;overflow:hidden}
+  .ch-bar>div{height:100%;background:var(--grad);border-radius:8px}
+  .ch-bar>div.o{background:var(--grad-warm)}
+  .ch-pending{border:2px solid var(--accent)}
+  .challenge-banner{position:fixed;top:0;left:0;right:0;z-index:300;transform:translateY(-120%);transition:transform .4s cubic-bezier(.34,1.56,.64,1);padding:8px}
+  .challenge-banner.show{transform:translateY(0)}
+  .cb-inner{max-width:680px;margin:0 auto;background:var(--grad);color:#fff;border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 12px 30px rgba(37,99,235,.4);cursor:pointer;font-size:14px}
+  .cb-emoji{font-size:30px;animation:cbpop 1s ease infinite}
+  @keyframes cbpop{0%,100%{transform:scale(1)}50%{transform:scale(1.25) rotate(-8deg)}}
+  .cb-x{margin-left:auto;background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:8px;width:26px;height:26px;cursor:pointer;flex:none}
 </style>
 </head>
 <body>
@@ -352,28 +375,7 @@
         <input type="checkbox" id="newHabitBad" style="width:auto"> 😈 Mauvaise habitude (à éviter — la cocher = malus)
       </label>
     </div>
-  </section>
 
-  <!-- MUSCU -->
-  <section class="view" id="view-gym">
-    <h2 class="section-title">Nouvelle séance</h2>
-    <div class="card">
-      <div class="row">
-        <div style="flex:1.4"><label class="fld">Date</label><input type="date" id="wDate"></div>
-        <div style="flex:2"><label class="fld">Nom de la séance</label><input id="wName" placeholder="ex. Push / Pull / Jambes"></div>
-      </div>
-      <hr class="sep">
-      <label class="fld">Exercices</label>
-      <div id="exRows"></div>
-      <button class="btn ghost sm" onclick="addExRow()">+ Exercice</button>
-      <button class="btn full" style="margin-top:12px" onclick="saveSession()">Enregistrer la séance</button>
-    </div>
-    <h2 class="section-title">Historique</h2>
-    <div class="card" id="sessionList"></div>
-  </section>
-
-  <!-- OBJECTIFS -->
-  <section class="view" id="view-goals">
     <h2 class="section-title">Objectifs &amp; questions à résoudre</h2>
     <div class="card">
       <label class="fld">Quelque chose à résoudre, un objectif, une question</label>
@@ -402,6 +404,30 @@
       <button class="btn full" style="margin-top:10px" onclick="addGoal()">Ajouter</button>
     </div>
     <div class="card" id="goalList"></div>
+  </section>
+
+  <!-- MUSCU -->
+  <section class="view" id="view-gym">
+    <h2 class="section-title">Nouvelle séance</h2>
+    <div class="card">
+      <div class="row">
+        <div style="flex:1.4"><label class="fld">Date</label><input type="date" id="wDate"></div>
+        <div style="flex:2"><label class="fld">Nom de la séance</label><input id="wName" placeholder="ex. Push / Pull / Jambes"></div>
+      </div>
+      <hr class="sep">
+      <label class="fld">Exercices</label>
+      <div id="exRows"></div>
+      <button class="btn ghost sm" onclick="addExRow()">+ Exercice</button>
+      <button class="btn full" style="margin-top:12px" onclick="saveSession()">Enregistrer la séance</button>
+    </div>
+    <h2 class="section-title">Historique</h2>
+    <div class="card" id="sessionList"></div>
+  </section>
+
+  <!-- AMIS -->
+  <section class="view" id="view-amis">
+    <h2 class="section-title">Amis &amp; défis</h2>
+    <div id="amisBody"></div>
   </section>
 
   <!-- JOURNAL -->
@@ -546,12 +572,13 @@
   <button data-v="home" class="active"><span class="ic">🏠</span>Accueil</button>
   <button data-v="habits"><span class="ic">✓</span>Habitudes</button>
   <button data-v="gym"><span class="ic">🏋️</span>Muscu</button>
-  <button data-v="goals"><span class="ic">🎯</span>Objectifs</button>
+  <button data-v="amis"><span class="ic">👥</span>Amis</button>
   <button data-v="journal"><span class="ic">📓</span>Journal</button>
   <button data-v="quiz"><span class="ic">🧩</span>Quiz</button>
   <button data-v="settings"><span class="ic">⚙️</span>Réglages</button>
 </nav>
 
+<div class="challenge-banner" id="challengeBanner"></div>
 <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -575,8 +602,8 @@ const BAKED_CONFIG = {
 const KEY="mon-espace-v1";
 let DB=load();
 function load(){
-  try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);d.settings=d.settings||{};d.quiz=d.quiz||null;return d;}}catch(e){}
-  return {habits:[],sessions:[],goals:[],entries:[],settings:{},quiz:null};
+  try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);d.settings=d.settings||{};d.quiz=d.quiz||null;d.social=d.social||null;return d;}}catch(e){}
+  return {habits:[],sessions:[],goals:[],entries:[],settings:{},quiz:null,social:null};
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(DB));pushCloud();}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
@@ -609,6 +636,7 @@ function go(v){
   document.getElementById("view-"+v).classList.add("active");
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("active",b.dataset.v===v));
   window.scrollTo(0,0);
+  if(v==="amis")renderAmis();
 }
 
 /* ---------- toast ---------- */
@@ -974,7 +1002,7 @@ function renderHome(){
     hf.innerHTML=`<div style="margin-bottom:6px"><strong>Sur quoi je travaille</strong></div>`+
       open.map(g=>`<div class="goal"><div class="check" onclick="toggleGoal('${g.id}')"></div><div class="gtext">${esc(g.text)}</div></div>`).join("");
   }else{
-    hf.innerHTML='<div style="margin-bottom:6px"><strong>Sur quoi je travaille</strong></div><div class="dim">Aucun objectif en cours. <a href="#" onclick="go(\'goals\');return false" style="color:var(--accent)">En ajouter un</a></div>';
+    hf.innerHTML='<div style="margin-bottom:6px"><strong>Sur quoi je travaille</strong></div><div class="dim">Aucun objectif en cours. <a href="#" onclick="go(\'habits\');return false" style="color:var(--accent)">En ajouter un</a></div>';
   }
 }
 function greeting(){
@@ -1024,9 +1052,9 @@ function statsXP(){
   DB.habits.forEach(h=>{const s=acc[h.stat]!==undefined?h.stat:"disc";const pts=Object.keys(h.done||{}).length*2;acc[s]+=h.bad?-pts:pts;});
   // Force : +6 par séance + 1 par exercice
   DB.sessions.forEach(s=>{acc.force+=6+(s.ex?s.ex.length:0);});
-  // Clarté : +4 par entrée de journal + 3 par bonne réponse au quiz
+  // Clarté : +4 par entrée de journal + quiz (bonne +3 / mauvaise -2)
   acc.clar+=DB.entries.length*4;
-  if(DB.quiz&&DB.quiz.correctTotal)acc.clar+=DB.quiz.correctTotal*3;
+  if(DB.quiz)acc.clar+=(DB.quiz.clarNet!==undefined?DB.quiz.clarNet:(DB.quiz.correctTotal||0)*3);
   // Vision : +3 par objectif créé, +12 si résolu
   DB.goals.forEach(g=>{acc.vis+=3+(g.done?12:0);});
   // Santé (saisie du jour) -> nourrit les stats, cumulé sur tous les jours
@@ -1443,8 +1471,8 @@ function quizAnswer(btn,kind,key,ci){
   if(!item)return;
   const ok=ci===correct;item.answered=true;item.chosen=ci;item.ok=ok;
   const exp=card.querySelector(".qexp");if(exp){exp.style.display="block";exp.innerHTML=(ok?"✅ Correct ! ":"❌ Bonne réponse : <b>"+esc(item.options[correct])+"</b>. ")+(item.exp?"<br>"+esc(item.exp):"");}
-  if(ok){q.correctTotal=(q.correctTotal||0)+1;if(kind==="review")item.mastered=true;}
-  else{if(kind==="today")scheduleReview(item);else item.due=todayKey(addDays(1));}
+  if(ok){q.correctTotal=(q.correctTotal||0)+1;q.clarNet=(q.clarNet||0)+3;if(kind==="review")item.mastered=true;}
+  else{q.clarNet=(q.clarNet||0)-2;if(kind==="today")scheduleReview(item);else item.due=todayKey(addDays(1));}
   save();updateQuizProgress();renderHome();
 }
 function qcardHTML(item,kind,key){
@@ -1501,6 +1529,177 @@ function renderQuiz(){
   }
   el.innerHTML=html;updateQuizProgress();
 }
+
+/* ============================================================
+   AMIS · profil public, code ami, classement, défis (Firestore)
+   ============================================================ */
+function SOC(){if(!DB.social)DB.social={name:"",code:"",friends:[]};return DB.social;}
+function genCode(){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+function fs(){return firebase.firestore();}
+function myLevel(){return avatarTier(totalPower())+1;}
+function myProfilePayload(){const s=SOC();return {name:s.name||"Anonyme",code:s.code,avatarLevel:myLevel(),score:dayScore(),updatedAt:Date.now()};}
+let profileT=null;
+function syncProfile(){
+  if(!cloud.uid||typeof firebase==="undefined")return;
+  const s=SOC();if(!s.code){s.code=genCode();save();}
+  clearTimeout(profileT);
+  profileT=setTimeout(()=>{try{fs().collection("profiles").doc(cloud.uid).set(myProfilePayload(),{merge:true});}catch(e){}},800);
+}
+let CH={incoming:[],outgoing:[]};
+function startSocial(){
+  if(!cloud.uid)return;
+  const s=SOC();if(!s.code){s.code=genCode();save();}
+  syncProfile();
+  // défis reçus / envoyés
+  try{
+    if(cloud.chIn)cloud.chIn();
+    cloud.chIn=fs().collection("challenges").where("to","==",cloud.uid).onSnapshot(qs=>{
+      CH.incoming=qs.docs.map(d=>Object.assign({id:d.id},d.data()));
+      renderAmis();maybeChallengeBanner();
+    },e=>console.error(e));
+    if(cloud.chOut)cloud.chOut();
+    cloud.chOut=fs().collection("challenges").where("from","==",cloud.uid).onSnapshot(qs=>{
+      CH.outgoing=qs.docs.map(d=>Object.assign({id:d.id},d.data()));renderAmis();
+    },e=>console.error(e));
+  }catch(e){console.error(e);}
+}
+function stopSocial(){if(cloud.chIn){cloud.chIn();cloud.chIn=null;}if(cloud.chOut){cloud.chOut();cloud.chOut=null;}CH={incoming:[],outgoing:[]};}
+
+function saveName(){const v=(document.getElementById("socName").value||"").trim().slice(0,20);SOC().name=v;save();syncProfile();renderAmis();toast("Pseudo enregistré");}
+function copyCode(){const c=SOC().code||"";if(navigator.clipboard)navigator.clipboard.writeText(c);toast("Code copié : "+c);}
+function addFriend(){
+  if(!cloud.uid){toast("Connecte-toi d'abord (Réglages)");go("settings");return;}
+  const code=(document.getElementById("friendCode").value||"").trim().toUpperCase();
+  if(!code){toast("Entre le code de ton pote");return;}
+  if(code===SOC().code){toast("C'est ton propre code 😄");return;}
+  toast("Recherche…");
+  fs().collection("profiles").where("code","==",code).limit(1).get().then(qs=>{
+    if(qs.empty){toast("Code introuvable");return;}
+    const doc=qs.docs[0];const fuid=doc.id;const fname=doc.data().name||"Ami";
+    const s=SOC();s.friends=s.friends||[];
+    if(s.friends.some(f=>f.uid===fuid)){toast("Déjà dans tes amis");return;}
+    s.friends.push({uid:fuid,name:fname});save();
+    document.getElementById("friendCode").value="";renderAmis();toast(fname+" ajouté ✅");
+  }).catch(e=>{console.error(e);toast("Erreur de recherche");});
+}
+function removeFriend(uid){
+  if(!confirm("Retirer cet ami ?"))return;
+  const s=SOC();s.friends=(s.friends||[]).filter(f=>f.uid!==uid);save();renderAmis();
+}
+function renderLeaderboard(){
+  const el=document.getElementById("leaderboard");if(!el)return;
+  const s=SOC();const me={name:(s.name||"Toi")+" (toi)",score:dayScore(),level:myLevel(),me:true};
+  const friends=s.friends||[];
+  if(!cloud.uid){el.innerHTML='<div class="dim">Connecte-toi (Réglages) pour activer le classement.</div>';return;}
+  Promise.all(friends.map(f=>fs().collection("profiles").doc(f.uid).get()
+    .then(d=>d.exists?{name:(d.data().name||f.name),score:d.data().score||0,level:d.data().avatarLevel||1}:{name:f.name,score:0,level:1})
+    .catch(()=>({name:f.name,score:0,level:1})))).then(arr=>{
+    const all=[me,...arr].sort((a,b)=>b.score-a.score);
+    el.innerHTML=all.map((u,i)=>`<div class="lb-row ${u.me?'me':''}">
+      <div class="lb-rank">${i+1}</div>
+      <div class="lb-name">${esc(u.name)} <span class="lb-lvl">Niv.${u.level}</span></div>
+      <div class="lb-score">${u.score}<small>/100</small></div></div>`).join("");
+  }).catch(()=>{el.innerHTML='<div class="dim">Classement indisponible.</div>';});
+}
+
+/* ---- défis ---- */
+function openChallengeForm(){
+  const s=SOC();const friends=s.friends||[];
+  if(!friends.length){toast("Ajoute d'abord un ami");return;}
+  const opts=friends.map(f=>`<option value="${f.uid}">${esc(f.name)}</option>`).join("");
+  const el=document.getElementById("challengeForm");
+  el.innerHTML=`<div class="card">
+    <strong>Lancer un défi</strong>
+    <label class="fld" style="margin-top:8px">Le défi (une habitude)</label>
+    <input id="chTitle" placeholder="ex. 7 jours de sport, lire 20 min…" maxlength="60">
+    <div class="row" style="margin-top:8px">
+      <select id="chFriend">${opts}</select>
+      <select id="chDays" style="max-width:110px">
+        <option value="3">3 jours</option><option value="7" selected>7 jours</option><option value="14">14 jours</option><option value="30">30 jours</option>
+      </select>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" onclick="sendChallenge()">Défier ✊</button>
+      <button class="btn subtle" onclick="document.getElementById('challengeForm').innerHTML=''">Annuler</button>
+    </div></div>`;
+}
+function sendChallenge(){
+  const title=(document.getElementById("chTitle").value||"").trim();
+  const to=document.getElementById("chFriend").value;
+  const days=parseInt(document.getElementById("chDays").value,10)||7;
+  if(!title){toast("Donne un titre au défi");return;}
+  const c={from:cloud.uid,fromName:(SOC().name||"Un ami"),to,title,days,status:"pending",start:null,progress:{},createdAt:Date.now()};
+  fs().collection("challenges").add(c).then(()=>{document.getElementById("challengeForm").innerHTML="";toast("Défi envoyé ✊");}).catch(e=>{console.error(e);toast("Erreur d'envoi");});
+}
+function acceptChallenge(id){fs().collection("challenges").doc(id).set({status:"accepted",start:todayKey()},{merge:true}).then(()=>toast("Défi accepté 🔥")).catch(()=>toast("Erreur"));}
+function declineChallenge(id){fs().collection("challenges").doc(id).set({status:"declined"},{merge:true}).catch(()=>{});}
+function challengeDoneToday(c){const p=(c.progress&&c.progress[cloud.uid])||[];return p.indexOf(todayKey())>=0;}
+function toggleChallengeDay(id){
+  const c=[...CH.incoming,...CH.outgoing].find(x=>x.id===id);if(!c)return;
+  const p=Object.assign({},c.progress||{});const mine=(p[cloud.uid]||[]).slice();
+  const tk=todayKey();const i=mine.indexOf(tk);
+  if(i>=0)mine.splice(i,1);else mine.push(tk);
+  p[cloud.uid]=mine;
+  fs().collection("challenges").doc(id).set({progress:p},{merge:true}).catch(()=>{});
+}
+function challengeCard(c){
+  const me=cloud.uid;const other=c.from===me?c.to:c.from;
+  const otherName=c.from===me?(friendName(c.to)):c.fromName;
+  const myCount=((c.progress&&c.progress[me])||[]).length;
+  const otherCount=((c.progress&&c.progress[other])||[]).length;
+  const myPct=Math.min(100,Math.round(myCount/c.days*100));
+  const oPct=Math.min(100,Math.round(otherCount/c.days*100));
+  const doneToday=challengeDoneToday(c);
+  return `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <strong>${esc(c.title)}</strong><span class="dim">${c.days} j</span></div>
+    <div class="ch-row"><span>Toi</span><div class="ch-bar"><div style="width:${myPct}%"></div></div><span class="dim">${myCount}/${c.days}</span></div>
+    <div class="ch-row"><span>${esc(otherName||"Ami")}</span><div class="ch-bar"><div class="o" style="width:${oPct}%"></div></div><span class="dim">${otherCount}/${c.days}</span></div>
+    <button class="btn ${doneToday?'subtle':''} full sm" style="margin-top:10px" onclick="toggleChallengeDay('${c.id}')">${doneToday?"✓ Fait aujourd'hui":"Marquer fait aujourd'hui"}</button>
+  </div>`;
+}
+function friendName(uid){const f=(SOC().friends||[]).find(x=>x.uid===uid);return f?f.name:"Ami";}
+
+function renderAmis(){
+  const el=document.getElementById("amisBody");if(!el)return;
+  if(!cloud.uid){el.innerHTML=`<div class="card"><strong>Connecte-toi pour jouer avec tes amis</strong><p class="dim" style="margin-top:4px">Va dans Réglages ⚙️ et connecte ton compte. Tes amis pourront voir ton avatar et ta note, et te lancer des défis.</p><button class="btn full" style="margin-top:8px" onclick="go('settings')">Aller aux Réglages</button></div>`;return;}
+  const s=SOC();if(!s.code){s.code=genCode();save();syncProfile();}
+  const pending=CH.incoming.filter(c=>c.status==="pending");
+  const active=[...CH.incoming,...CH.outgoing].filter(c=>c.status==="accepted");
+  el.innerHTML=`
+    <div class="card">
+      <strong>Ton profil</strong>
+      <label class="fld" style="margin-top:8px">Ton pseudo</label>
+      <div class="row"><input id="socName" placeholder="ex. Cesar" maxlength="20" value="${esc(s.name||"")}"><button class="btn" style="flex:none" onclick="saveName()">OK</button></div>
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;background:var(--accent-soft);border-radius:12px;padding:10px 14px">
+        <div><div class="dim" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em">Ton code ami</div><div style="font-size:22px;font-weight:800;letter-spacing:.12em;color:var(--accent)">${esc(s.code||"…")}</div></div>
+        <button class="btn ghost sm" onclick="copyCode()">Copier</button>
+      </div>
+    </div>
+    <div class="card">
+      <strong>Ajouter un ami</strong>
+      <div class="row" style="margin-top:8px"><input id="friendCode" placeholder="Code de ton pote (6 lettres)" maxlength="6" style="text-transform:uppercase"><button class="btn" style="flex:none" onclick="addFriend()">Ajouter</button></div>
+    </div>
+    ${pending.length?`<h2 class="section-title">Défis reçus</h2>`+pending.map(c=>`<div class="card ch-pending"><strong>✊ ${esc(c.fromName||"Un ami")} te défie</strong><div style="margin:6px 0">${esc(c.title)} · ${c.days} jours</div><div class="row"><button class="btn" onclick="acceptChallenge('${c.id}')">Accepter 🔥</button><button class="btn subtle" onclick="declineChallenge('${c.id}')">Refuser</button></div></div>`).join(""):""}
+    <h2 class="section-title">Classement</h2>
+    <div class="card" id="leaderboard"><div class="dim">Chargement…</div></div>
+    <h2 class="section-title">Défis en cours</h2>
+    <div id="challengeForm"></div>
+    ${active.length?active.map(challengeCard).join(""):'<div class="card dim">Aucun défi en cours.</div>'}
+    <button class="btn ghost full" style="margin-top:4px" onclick="openChallengeForm()">✊ Lancer un défi</button>
+    ${(SOC().friends||[]).length?`<h2 class="section-title">Tes amis (${(SOC().friends||[]).length})</h2><div class="card">`+(SOC().friends||[]).map(f=>`<div class="lb-row"><div class="lb-name">${esc(f.name)}</div><button class="iconbtn" onclick="removeFriend('${f.uid}')">✕</button></div>`).join("")+`</div>`:""}
+  `;
+  renderLeaderboard();
+}
+function maybeChallengeBanner(){
+  const pending=CH.incoming.filter(c=>c.status==="pending");
+  const b=document.getElementById("challengeBanner");if(!b)return;
+  if(pending.length){const c=pending[0];
+    b.innerHTML=`<div class="cb-inner" onclick="go('amis');hideBanner()"><span class="cb-emoji">✊</span><div><b>${esc(c.fromName||"Un ami")} t'a défié !</b><br><span style="opacity:.9">${esc(c.title)} · ${c.days} jours — touche pour voir</span></div><button class="cb-x" onclick="event.stopPropagation();hideBanner()">✕</button></div>`;
+    b.classList.add("show");
+  }else{b.classList.remove("show");}
+}
+function hideBanner(){const b=document.getElementById("challengeBanner");if(b)b.classList.remove("show");}
 
 function renderAll(){renderHome();renderHabits();renderSessions();renderGoals();renderEntries();renderHealth();renderGeminiStatus();renderQuiz();}
 
@@ -1583,11 +1782,13 @@ function onLoggedIn(u){
     localStorage.setItem("me-health",JSON.stringify(HEALTH));
     evalAutoGoals();renderHealth();renderGoals();renderHome();
   },err=>console.error(err));
+  startSocial();
 }
 function onLoggedOut(){
   cloud.uid=null;
   if(cloud.unsub){cloud.unsub();cloud.unsub=null;}
   if(cloud.hunsub){cloud.hunsub();cloud.hunsub=null;}
+  stopSocial();renderAmis();
   setCloudDot(getCfg()?"off":"off",getCfg()?"Non connecté":"Hors-ligne");
 }
 
@@ -1603,8 +1804,9 @@ function pushNow(){
     .set({db:DB,updatedAt:Date.now()})
     .then(()=>setCloudDot("on","Synchronisé"))
     .catch(e=>{console.error(e);setCloudDot("err","Erreur sync");});
+  if(typeof syncProfile==="function")syncProfile();
 }
-function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[],settings:d.settings||{},quiz:d.quiz||null};}
+function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[],settings:d.settings||{},quiz:d.quiz||null,social:d.social||null};}
 
 /* ---- auth actions ---- */
 function authErr(e){
