@@ -265,9 +265,9 @@
   .health-date{font-size:12px;color:var(--muted);margin-top:10px}
 
   /* avatar évolutif */
-  .avatar-img{width:100%;border-radius:16px;display:block;max-height:440px;object-fit:cover;object-position:top;background:#eef1f8}
-  .avatar-name{font-weight:800;font-size:19px;margin-top:11px;letter-spacing:-.01em}
-  .avatar-sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .avatar-img{display:block;margin:0 auto;width:100%;max-width:300px;height:auto;border-radius:16px;background:#eef1f8}
+  .avatar-name{font-weight:800;font-size:19px;margin-top:12px;letter-spacing:-.01em;text-align:center}
+  .avatar-sub{font-size:12.5px;color:var(--muted);margin-top:3px;text-align:center}
   .avatar-bar{height:10px;border-radius:8px;background:#eef1f8;overflow:hidden;margin-top:8px}
   .avatar-bar>div{height:100%;background:var(--grad);border-radius:8px;transition:width .8s cubic-bezier(.22,1,.36,1)}
 
@@ -470,9 +470,17 @@
     <div class="card">
       <strong>Clé Gemini (Google)</strong>
       <p class="dim" style="margin-top:4px">Pour que l'IA lise tes captures d'écran (Temps d'écran, Santé…) et remplisse les champs toute seule. Gratuit. Crée ta clé sur <span style="color:var(--accent)">aistudio.google.com/apikey</span> et colle-la ici. Pense à la restreindre à ton site (voir le guide).</p>
-      <input id="geminiKey" type="password" placeholder="Colle ta clé Gemini ici" autocomplete="off">
-      <button class="btn full" style="margin-top:8px" onclick="saveGeminiKey()">Enregistrer la clé</button>
-      <div id="geminiStatus" class="dim" style="margin-top:8px"></div>
+      <div id="geminiSaved" style="display:none">
+        <div class="auth-status connected"><span class="dot"></span><span>Clé enregistrée ✓ (synchronisée entre tes appareils)</span></div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn ghost sm" onclick="testGemini()">Tester la clé</button>
+          <button class="btn subtle sm" onclick="changeGeminiKey()">Changer la clé</button>
+        </div>
+      </div>
+      <div id="geminiSetup">
+        <input id="geminiKey" type="password" placeholder="Colle ta clé Gemini ici" autocomplete="off">
+        <button class="btn full" style="margin-top:8px" onclick="saveGeminiKey()">Enregistrer la clé</button>
+      </div>
     </div>
 
     <h2 class="section-title">Coach &amp; rappels</h2>
@@ -1249,15 +1257,30 @@ function geminiKey(){
 }
 function saveGeminiKey(){
   const el=document.getElementById("geminiKey");const v=(el?el.value:"").trim();
+  if(!v){toast("Colle ta clé d'abord");return;}
   DB.settings=DB.settings||{};
-  if(v){DB.settings.geminiKey=v;localStorage.setItem("me-gemini-key",v);}
-  else{delete DB.settings.geminiKey;localStorage.removeItem("me-gemini-key");}
+  DB.settings.geminiKey=v;localStorage.setItem("me-gemini-key",v);
+  if(el)el.value="";
   save(); // persiste en local ET dans Firebase (synchro tous appareils)
-  renderGeminiStatus();toast(v?"Clé IA enregistrée ✅ (synchronisée)":"Clé retirée");
+  renderGeminiStatus();toast("Clé IA enregistrée ✅ (synchronisée)");
+}
+function changeGeminiKey(){
+  const su=document.getElementById("geminiSetup");if(su)su.style.display="block";
+  const sv=document.getElementById("geminiSaved");if(sv)sv.style.display="none";
+  const i=document.getElementById("geminiKey");if(i){i.value="";i.focus();}
+}
+function testGemini(){
+  if(!geminiKey()){toast("Aucune clé enregistrée");return;}
+  toast("Test de la clé… 🤖");
+  geminiCall([{text:"Réponds uniquement: ok"}],false)
+    .then(()=>toast("Clé valide ✅"))
+    .catch(e=>toast("Clé invalide : "+((e&&e.message)||"").slice(0,40)));
 }
 function renderGeminiStatus(){
-  const s=document.getElementById("geminiStatus");if(!s)return;
-  s.textContent=geminiKey()?"✅ Clé configurée — l'import par capture est prêt.":"";
+  const has=!!geminiKey();
+  const sv=document.getElementById("geminiSaved"),su=document.getElementById("geminiSetup");
+  if(sv)sv.style.display=has?"block":"none";
+  if(su)su.style.display=has?"none":"block";
 }
 function pickHealthShot(){
   if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages ⚙️");go("settings");return;}
