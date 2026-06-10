@@ -370,24 +370,33 @@
   .ch-result.lose{background:#ffe4e4;color:#c0392b}
   .ch-result.tie{background:var(--accent-soft);color:var(--accent)}
   /* ===== Tuto animé ===== */
+  /* onboarding (compte + prénom) */
   .tuto{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:18px;
-    background:linear-gradient(160deg,#eef3ff,#f4f7fc);overflow:hidden}
-  .tuto-card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:24px;
-    width:100%;max-width:380px;padding:26px 22px 20px;box-shadow:0 24px 70px rgba(37,99,235,.22);overflow:hidden}
-  .tuto-skip{position:absolute;top:12px;right:14px;border:none;background:transparent;color:var(--muted);
-    font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;z-index:2}
-  .tuto-slide{min-height:320px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
-  .tuto-slide>*{animation:tutoUp .5s cubic-bezier(.22,1,.36,1) both}
+    background:linear-gradient(160deg,#eef3ff,#f4f7fc)}
+  .tuto-card{background:var(--card);border:1px solid var(--line);border-radius:24px;width:100%;max-width:360px;
+    padding:28px 22px 22px;box-shadow:0 24px 70px rgba(37,99,235,.22);text-align:center}
+  .ob-step .ob-emoji{font-size:46px;line-height:1;animation:tutoUp .5s both}
+  .ob-step h3{margin:12px 0 4px;font-size:21px;font-weight:800}
+  .ob-step p.dim{margin:0 0 14px;font-size:13.5px}
+  .ob-step input{margin-bottom:9px;text-align:center}
   @keyframes tutoUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-  .tt-title{font-size:21px;font-weight:800;letter-spacing:-.01em;margin:14px 0 8px}
-  .tt-body{font-size:14.5px;color:var(--ink);line-height:1.55}
-  .tt-body b{color:var(--accent)}
-  .tt-sub{font-size:12.5px;color:var(--muted);margin-top:8px}
-  .tuto-dots{display:flex;gap:6px;justify-content:center;margin:16px 0 12px}
-  .tuto-dots i{width:7px;height:7px;border-radius:50%;background:var(--line);transition:all .3s}
-  .tuto-dots i.on{background:var(--accent);width:20px;border-radius:4px}
-  .tuto-nav{display:flex;justify-content:space-between;gap:10px}
-  .tuto-nav .btn{flex:1}
+  .tuto-err{color:#c0392b;font-size:13px;font-weight:600;min-height:16px;text-align:center;margin-top:6px}
+  /* tour guidé : coachmarks */
+  #tour{position:fixed;inset:0;z-index:10000}
+  #tourHole{position:fixed;border-radius:14px;pointer-events:none;
+    box-shadow:0 0 0 9999px rgba(15,23,42,.74), 0 0 0 3px rgba(255,255,255,.9), 0 0 26px 6px rgba(37,99,235,.5);
+    transition:left .35s cubic-bezier(.22,1,.36,1),top .35s cubic-bezier(.22,1,.36,1),width .35s,height .35s}
+  #tourTip{position:fixed;z-index:10002;max-width:320px;background:var(--card);border-radius:16px;padding:15px 16px;
+    box-shadow:0 18px 50px rgba(0,0,0,.32);transition:left .3s,top .3s;animation:tutoUp .3s both}
+  #tourTip h4{margin:0 0 5px;font-size:16px;font-weight:800}
+  #tourTip p{margin:0;font-size:13.5px;color:var(--ink);line-height:1.5}
+  #tourTip p b{color:var(--accent)}
+  .tour-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:13px}
+  .tour-skip{border:none;background:none;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;font-family:inherit}
+  .tour-count{font-size:12px;color:var(--muted);font-weight:600}
+  .install-steps{margin-top:10px;font-size:13.5px;line-height:1.7}
+  .install-steps>div{background:var(--accent-soft);border-radius:12px;padding:10px 12px}
+  .install-steps .ib{display:inline-block;padding:0 2px}
   /* visuels animés */
   .tt-hero{font-size:74px;line-height:1;animation:ttBounce 1.6s ease-in-out infinite}
   @keyframes ttBounce{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-12px) rotate(3deg)}}
@@ -543,12 +552,34 @@
 <!-- ===== Tuto animé (premier lancement) ===== -->
 <div id="tuto" class="tuto" style="display:none">
   <div class="tuto-card">
-    <button class="tuto-skip" onclick="endTuto()">Passer ✕</button>
-    <div id="tutoSlide" class="tuto-slide"></div>
-    <div class="tuto-dots" id="tutoDots"></div>
-    <div class="tuto-nav">
-      <button class="btn subtle sm" id="tutoPrev" onclick="tutoGo(-1)">← Retour</button>
-      <button class="btn" id="tutoNext" onclick="tutoGo(1)">Suivant →</button>
+    <div id="obAccount" class="ob-step">
+      <div class="ob-emoji">🔐</div>
+      <h3>Connecte-toi</h3>
+      <p class="dim">Avec ton email — pour sauvegarder ta progression et te synchroniser entre tes appareils.</p>
+      <input id="obEmail" type="email" placeholder="Ton email" autocomplete="email">
+      <input id="obPass" type="password" placeholder="Mot de passe (6 caractères min)" autocomplete="current-password">
+      <button class="btn full" onclick="onboardSignup()">Créer mon compte 🚀</button>
+      <button class="btn ghost full sm" style="margin-top:8px" onclick="onboardLogin()">J'ai déjà un compte — me connecter</button>
+      <div id="obErr" class="tuto-err"></div>
+    </div>
+    <div id="obName" class="ob-step" style="display:none">
+      <div class="ob-emoji">👋</div>
+      <h3>Comment tu t'appelles ?</h3>
+      <p class="dim">L'app te dira bonjour par ton prénom.</p>
+      <input id="obNameInput" type="text" placeholder="Ton prénom" autocomplete="off" onkeydown="if(event.key==='Enter')saveOnboardName()">
+      <button class="btn full" onclick="saveOnboardName()">C'est parti 🚀</button>
+    </div>
+  </div>
+</div>
+<!-- ===== Tour guidé interactif (coachmarks) ===== -->
+<div id="tour" style="display:none">
+  <div id="tourHole"></div>
+  <div id="tourTip">
+    <div id="tourTipBody"></div>
+    <div class="tour-nav">
+      <button class="tour-skip" onclick="endTour()">Passer</button>
+      <span id="tourCount" class="tour-count"></span>
+      <button class="btn sm" id="tourNextBtn" onclick="tourNext()">Suivant →</button>
     </div>
   </div>
 </div>
@@ -668,10 +699,15 @@
       <div id="exRows"></div>
       <div class="row" style="margin-top:6px">
         <button class="btn ghost sm" onclick="addExRow()">+ Exercice</button>
-        <button class="btn ghost sm" onclick="pickWorkoutShot()">📷 Importer une capture</button>
+        <button class="btn ghost sm" onclick="pickWorkoutShot()">📷 Photo / capture</button>
+        <button class="btn ghost sm" onclick="toggleWorkoutText()">📝 Coller des notes</button>
+      </div>
+      <div id="wTextWrap" style="display:none;margin-top:8px">
+        <textarea id="wTextInput" rows="4" placeholder="Colle ici tes notes de séance (ex. « Développé couché 80kg 4x8, Dips 3x12 »). L'IA s'occupe du reste." style="width:100%;resize:vertical"></textarea>
+        <button class="btn full sm" style="margin-top:6px" onclick="importWorkoutText()">✨ Analyser le texte</button>
       </div>
       <div id="wShotMsg" class="dim" style="margin-top:6px"></div>
-      <input type="file" id="wShotInput" accept="image/*" capture="environment" style="display:none" onchange="onWorkoutShot(event)">
+      <input type="file" id="wShotInput" accept="image/*" style="display:none" onchange="onWorkoutShot(event)">
       <button class="btn full" style="margin-top:12px" onclick="saveSession()">Enregistrer la séance</button>
     </div>
 
@@ -785,16 +821,18 @@
       <p class="dim" style="margin-top:4px">L'app te dit bonjour par ton prénom.</p>
       <input id="setName" type="text" placeholder="Ton prénom" autocomplete="off">
       <button class="btn full" style="margin-top:8px" onclick="saveSetName()">Enregistrer</button>
-      <button class="btn ghost full sm" style="margin-top:8px" onclick="startTuto()">▶ Revoir le tuto de présentation</button>
+      <button class="btn ghost full sm" style="margin-top:8px" onclick="startTuto(true)">▶ Revoir le tuto de présentation</button>
     </div>
 
-    <h2 class="section-title">Code d'accès 🔒</h2>
+    <h2 class="section-title">Installer l'app 📲</h2>
     <div class="card">
-      <strong>Verrouille l'ouverture de l'app</strong>
-      <p class="dim" style="margin-top:4px">Un code à entrer pour ouvrir Mon Espace. Tu le choisis, et tu peux le changer quand tu veux. Si tu es connecté à ton compte, le nouveau code s'applique sur <b>tous tes appareils</b> (ils redemanderont le code).</p>
-      <input id="newAccessCode" type="password" inputmode="numeric" placeholder="Nouveau code d'accès" autocomplete="off">
-      <button class="btn full" style="margin-top:8px" onclick="changeAccessCode()">Enregistrer le code</button>
-      <div id="accessMsg" class="dim" style="margin-top:8px"></div>
+      <strong>Ajoute Mon Espace à ton écran d'accueil</strong>
+      <p class="dim" style="margin-top:4px">Pour l'ouvrir comme une vraie appli (plein écran, une icône), depuis ton navigateur :</p>
+      <div class="install-steps">
+        <div><b>📱 iPhone (Safari)</b><br>1. Touche le bouton <b>Partager</b> <span class="ib">⬆️</span> en bas.<br>2. Fais défiler et choisis <b>« Sur l'écran d'accueil »</b>.<br>3. Touche <b>Ajouter</b> en haut à droite.</div>
+        <div style="margin-top:10px"><b>🤖 Android (Chrome)</b><br>1. Touche le menu <b>⋮</b> en haut à droite.<br>2. Choisis <b>« Ajouter à l'écran d'accueil »</b>.<br>3. Confirme avec <b>Ajouter</b>.</div>
+        <div style="margin-top:10px"><b>💻 Ordi (Chrome/Edge)</b><br>Clique l'icône <b>⊕ d'installation</b> dans la barre d'adresse, puis <b>Installer</b>.</div>
+      </div>
     </div>
 
     <h2 class="section-title">Import par capture (IA)</h2>
@@ -1436,9 +1474,17 @@ function renderHome(){
 }
 function userName(){return ((DB.settings&&DB.settings.name)||"").trim();}
 function renderNameSettings(){const i=document.getElementById("setName");if(i)i.value=userName();}
+// définit le prénom ET le pseudo affiché aux amis (les deux toujours synchro)
+function setUserName(v){
+  v=(v||"").trim().slice(0,24);
+  DB.settings=DB.settings||{};DB.settings.name=v;
+  if(typeof SOC==="function")SOC().name=v;
+  save();
+  if(typeof syncProfile==="function")syncProfile();
+}
 function saveSetName(){
   const i=document.getElementById("setName");const v=(i&&i.value||"").trim().slice(0,24);
-  DB.settings=DB.settings||{};DB.settings.name=v;save();renderHome();toast(v?("Salut "+v+" 👋"):"Prénom retiré");
+  setUserName(v);renderHome();renderAmis&&renderAmis();toast(v?("Salut "+v+" 👋"):"Prénom retiré");
 }
 function greeting(){
   const h=new Date().getHours();const n=userName();const who=n?", "+n:"";
@@ -1502,10 +1548,8 @@ function healthStatXP(){
   const a={force:0,disc:0,clar:0,vis:0};
   Object.values((typeof HEALTH!=="undefined"&&HEALTH)||{}).forEach(day=>{
     if(!day)return;
-    const steps=Number(day.steps);if(!isNaN(steps))a.force+=steps/1000;       // +1 / 1000 pas
-    const wc=Number(day.workoutCount);if(!isNaN(wc))a.force+=wc*6;             // +6 / séance
-    const cal=Number(day.activeCalories);if(!isNaN(cal))a.force+=cal/100;      // +1 / 100 cal
-    const hr=Number(day.restingHR);if(!isNaN(hr)&&hr>0&&hr<60)a.force+=2;      // bonne FC repos
+    const steps=Number(day.steps);if(!isNaN(steps))a.force+=Math.min(steps,20000)/1000;   // +1 / 1000 pas, plafond 20 000 pas (max +20)
+    const cal=Number(day.activeCalories);if(!isNaN(cal))a.force+=Math.min(cal,1000)/100;   // +1 / 100 cal, plafond 1000 cal (max +10)
     const sl=Number(day.sleepHours);if(!isNaN(sl))a.clar+= sl>=9?5:sl>=8?4:sl>=7?3:sl>=6?1:sl>=5?-1:-3; // sommeil -> clarté (malus si court)
     const sm=Number(day.screenMinutes);if(!isNaN(sm))a.disc+= sm<=90?5:sm<=120?3:sm<=180?1:sm<=300?-2:-4; // écran -> discipline (malus si élevé)
   });
@@ -1754,12 +1798,15 @@ function grantLevelPrimes(){
   if(total>0){w.billets+=total;save();toast("🎉 Niveau "+w.claimedLevel+" « "+AVATARS[w.claimedLevel-1].name+" » · +"+fmtBillets(total)+" billets 💵");}
   return total;
 }
-function dailyPayAmount(){return Math.round(dayScore()*50);}
-function payClaimedToday(){return WALLET().lastPay===todayKey();}
+function dailyPayTarget(){return Math.round(dayScore()*50);}           // total gagnable aujourd'hui
+function paidToday(){const w=WALLET();return w.payDay===todayKey()?(w.paidToday||0):0;}
+function claimableNow(){return Math.max(0,dailyPayTarget()-paidToday());}
+function payClaimedToday(){return claimableNow()<=0;}                  // plus rien à réclamer pour l'instant
 function claimDailyPay(){
-  const w=WALLET();
-  if(payClaimedToday()){toast("Paie déjà réclamée — reviens demain");return;}
-  const amt=dailyPayAmount();w.billets+=amt;w.lastPay=todayKey();save();renderWallet();renderShop();
+  const w=WALLET();const amt=claimableNow();
+  if(amt<=0){toast("Rien à réclamer pour l'instant — fais-en plus aujourd'hui 💪");return;}
+  w.billets+=amt;w.payDay=todayKey();w.paidToday=dailyPayTarget();
+  save();renderWallet();renderShop();
   toast("💵 +"+fmtBillets(amt)+" billets (paie du jour)");
 }
 /* dépenses */
@@ -1793,9 +1840,9 @@ function ensureBubbles(on){
 }
 /* rendus */
 function walletBarHTML(){
-  const w=WALLET();const claimed=payClaimedToday();
+  const w=WALLET();const amt=claimableNow();
   return `<div class="wallet"><div class="bal">💵 ${fmtBillets(w.billets)} <small>billets</small></div>
-    <button class="pay" onclick="claimDailyPay()" ${claimed?'disabled':''}>${claimed?'Paie prise ✓':'Réclamer +'+fmtBillets(dailyPayAmount())}</button></div>`;
+    <button class="pay" onclick="claimDailyPay()" ${amt<=0?'disabled':''}>${amt<=0?'Paie à jour ✓':'Réclamer +'+fmtBillets(amt)}</button></div>`;
 }
 function renderWallet(){const el=document.getElementById("homeWallet");if(el)el.innerHTML=walletBarHTML();}
 function renderShop(){
@@ -2268,7 +2315,7 @@ function maybeEffectBanner(){
   b.classList.add("show");
 }
 
-function saveName(){const v=(document.getElementById("socName").value||"").trim().slice(0,20);SOC().name=v;save();syncProfile();renderAmis();toast("Pseudo enregistré");}
+function saveName(){const v=(document.getElementById("socName").value||"").trim().slice(0,20);setUserName(v);renderHome();renderAmis();toast("Pseudo enregistré");}
 function copyCode(){const c=myCode();if(navigator.clipboard)navigator.clipboard.writeText(c);toast("Code copié : "+c);}
 function addFriend(){
   if(!cloud.uid){toast("Connecte-toi d'abord (Réglages)");go("settings");return;}
@@ -2342,8 +2389,50 @@ function sendChallenge(){
   const c={from:cloud.uid,fromName:(SOC().name||"Un ami"),to,title,days,stake,status:"pending",start:null,progress:{},createdAt:Date.now()};
   fs().collection("challenges").add(c).then(()=>{document.getElementById("challengeForm").innerHTML="";toast(stake?"Défi-pari envoyé ✊💰":"Défi envoyé ✊");}).catch(e=>{console.error(e);toast("Erreur d'envoi");});
 }
-function acceptChallenge(id){fs().collection("challenges").doc(id).set({status:"accepted",start:todayKey()},{merge:true}).then(()=>toast("Défi accepté 🔥")).catch(()=>toast("Erreur"));}
+function acceptChallenge(id){
+  const c=[...CH.incoming,...CH.outgoing].find(x=>x.id===id);const stake=(c&&c.stake)||0;
+  if(stake>0){
+    if(WALLET().billets<stake){toast("Pas assez de billets pour accepter ce pari ("+fmtBillets(stake)+" 💵)");return;}
+    if(!confirm("Accepter ce pari ? Ta mise de "+fmtBillets(stake)+" billets est bloquée jusqu'à la fin."))return;
+    WALLET().billets-=stake;DB.escrowedChallenges=DB.escrowedChallenges||{};DB.escrowedChallenges[id]=true;save();renderHome();
+  }
+  fs().collection("challenges").doc(id).set({status:"accepted",start:todayKey(),acceptedAt:Date.now()},{merge:true})
+    .then(()=>toast(stake?"Pari accepté 💰🔥":"Défi accepté 🔥")).catch(()=>toast("Erreur"));
+}
 function declineChallenge(id){fs().collection("challenges").doc(id).set({status:"declined"},{merge:true}).catch(()=>{});}
+function within24h(c){return c.acceptedAt&&(Date.now()-c.acceptedAt<24*3600*1000);}
+// supprimer un défi (non-pari : à tout moment) ou annuler un pari (dans les 24h, mise rendue)
+function deleteChallenge(id){
+  const c=[...CH.incoming,...CH.outgoing].find(x=>x.id===id);if(!c)return;
+  if(c.stake&&c.status==="accepted"){
+    if(!within24h(c)){toast("Trop tard — un pari ne s'annule que dans les 24 premières heures");return;}
+    if(!confirm("Annuler ce pari ? La mise est rendue aux deux joueurs."))return;
+    fs().collection("challenges").doc(id).set({status:"cancelled"},{merge:true}).catch(()=>toast("Erreur"));
+  }else{
+    if(!confirm("Supprimer ce défi ?"))return;
+    fs().collection("challenges").doc(id).delete().catch(()=>toast("Erreur"));
+  }
+}
+// le client engage sa propre mise quand le pari passe en "accepted" (émetteur)
+function applyBetEscrow(){
+  DB.escrowedChallenges=DB.escrowedChallenges||{};DB.settledChallenges=DB.settledChallenges||{};let changed=false;
+  [...CH.incoming,...CH.outgoing].forEach(c=>{
+    if(c.status!=="accepted"||!c.stake||DB.escrowedChallenges[c.id]||DB.settledChallenges[c.id])return;
+    const w=WALLET();const pay=Math.min(c.stake,w.billets);w.billets-=pay;DB.escrowedChallenges[c.id]=true;changed=true;
+    toast("💰 Mise engagée : −"+fmtBillets(pay)+" billets (pari « "+c.title+" »)");
+  });
+  if(changed)save();
+}
+// rembourse la mise quand un pari est annulé (les deux joueurs, une fois)
+function refundCancelledBets(){
+  DB.refundedChallenges=DB.refundedChallenges||{};DB.escrowedChallenges=DB.escrowedChallenges||{};let changed=false;
+  [...CH.incoming,...CH.outgoing].forEach(c=>{
+    if(c.status!=="cancelled"||!c.stake||DB.refundedChallenges[c.id])return;
+    if(DB.escrowedChallenges[c.id]){WALLET().billets+=c.stake;toast("↩️ Pari annulé — mise rendue : +"+fmtBillets(c.stake)+" billets");}
+    DB.refundedChallenges[c.id]=true;changed=true;
+  });
+  if(changed)save();
+}
 function challengeDoneToday(c){const p=(c.progress&&c.progress[cloud.uid])||[];return p.indexOf(todayKey())>=0;}
 function toggleChallengeDay(id){
   const c=[...CH.incoming,...CH.outgoing].find(x=>x.id===id);if(!c)return;
@@ -2361,13 +2450,16 @@ function challengeOutcome(c){
   if(myCount>otherCount)return "win";if(myCount<otherCount)return "lose";return "tie";
 }
 // règle les paris terminés : +mise au gagnant / −mise au perdant (une seule fois, localement)
+// la mise est déjà bloquée (escrow) chez chaque joueur ; au règlement :
+// gagnant = récupère 2× la mise (la sienne + celle du perdant) ; perdant = rien ; égalité = mise rendue
 function settleFinishedChallenges(){
   DB.settledChallenges=DB.settledChallenges||{};let changed=false;
   [...CH.incoming,...CH.outgoing].forEach(c=>{
     if(c.status!=="accepted"||!c.stake||!challengeFinished(c)||DB.settledChallenges[c.id])return;
     const out=challengeOutcome(c);DB.settledChallenges[c.id]=out;changed=true;
-    if(out==="win"){WALLET().billets+=c.stake;toast("🏆 Pari gagné : « "+c.title+" » · +"+fmtBillets(c.stake)+" billets !");}
-    else if(out==="lose"){WALLET().billets=Math.max(0,WALLET().billets-c.stake);toast("💸 Pari perdu : « "+c.title+" » · −"+fmtBillets(c.stake)+" billets");}
+    if(out==="win"){WALLET().billets+=c.stake*2;toast("🏆 Pari gagné : « "+c.title+" » · +"+fmtBillets(c.stake*2)+" billets !");}
+    else if(out==="lose"){toast("💸 Pari perdu : « "+c.title+" » · tu perds ta mise de "+fmtBillets(c.stake));}
+    else{WALLET().billets+=c.stake;toast("🤝 Égalité : « "+c.title+" » · mise rendue");}
   });
   if(changed)save();
 }
@@ -2389,9 +2481,10 @@ function challengeCard(c){
   }else{
     footer=`<button class="btn ${doneToday?'subtle':''} full sm" style="margin-top:10px" onclick="toggleChallengeDay('${c.id}')">${doneToday?"✓ Fait aujourd'hui":"Marquer fait aujourd'hui"}</button>`;
   }
+  const delBtn=finished?"":`<button class="iconbtn" onclick="deleteChallenge('${c.id}')" title="${c.stake?'Annuler le pari (24h max)':'Supprimer le défi'}">✕</button>`;
   return `<div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <strong>${esc(c.title)}</strong><span class="dim">${c.days} j</span></div>${stakeH}
+      <strong>${esc(c.title)}</strong><span class="dim">${c.days} j ${delBtn}</span></div>${stakeH}
     <div class="ch-row"><span>Toi</span><div class="ch-bar"><div style="width:${myPct}%"></div></div><span class="dim">${myCount}/${c.days}</span></div>
     <div class="ch-row"><span>${esc(otherName||"Ami")}</span><div class="ch-bar"><div class="o" style="width:${oPct}%"></div></div><span class="dim">${otherCount}/${c.days}</span></div>
     ${footer}
@@ -2403,7 +2496,7 @@ function renderAmis(){
   const el=document.getElementById("amisBody");if(!el)return;
   if(!cloud.uid){el.innerHTML=`<div class="card"><strong>Connecte-toi pour jouer avec tes amis</strong><p class="dim" style="margin-top:4px">Va dans Réglages ⚙️ et connecte ton compte. Tes amis pourront voir ton avatar et ta note, et te lancer des défis.</p><button class="btn full" style="margin-top:8px" onclick="go('settings')">Aller aux Réglages</button></div>`;return;}
   const s=SOC();
-  settleFinishedChallenges();
+  applyBetEscrow();settleFinishedChallenges();refundCancelledBets();
   const pending=CH.incoming.filter(c=>c.status==="pending");
   const active=[...CH.incoming,...CH.outgoing].filter(c=>c.status==="accepted");
   el.innerHTML=`
@@ -2516,15 +2609,15 @@ function pickWorkoutShot(){
   document.getElementById("wShotInput").click();
 }
 function onWorkoutShot(ev){const f=ev.target.files[0];ev.target.value="";if(f)importWorkoutShot(f);}
-function importWorkoutShot(file){
-  if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages ⚙️");go("settings");return;}
+function toggleWorkoutText(){const w=document.getElementById("wTextWrap");if(w){w.style.display=w.style.display==="none"?"block":"none";if(w.style.display==="block")document.getElementById("wTextInput").focus();}}
+const WORKOUT_PROMPT="Tu lis des notes de séance de musculation (photo, capture, ou texte saisi). "+
+  "Extrais chaque exercice avec son poids, ses séries et ses répétitions. Réponds STRICTEMENT en JSON: "+
+  "{\"name\":\"nom de la séance si présent (ex. Push, Jambes) sinon null\",\"exercises\":[{\"name\":\"nom de l'exercice\",\"weight\":nombre_en_kg_ou_null,\"sets\":entier_ou_null,\"reps\":entier_ou_null}]}. "+
+  "Convertis les livres (lb/lbs) en kg (1 lb = 0.45 kg, arrondi). Pour '3x10' -> sets:3, reps:10. N'invente aucun exercice absent. Réponds UNIQUEMENT le JSON.";
+function applyWorkoutAI(parts){
   const msg=document.getElementById("wShotMsg");if(msg)msg.textContent="Lecture de ta séance… 🤖";
   toast("Lecture de ta séance… 🤖");
-  const prompt="Tu lis une photo ou capture de notes de séance de musculation (manuscrites ou app de tracking). "+
-    "Extrais chaque exercice avec son poids, ses séries et ses répétitions. Réponds STRICTEMENT en JSON: "+
-    "{\"name\":\"nom de la séance si présent (ex. Push, Jambes) sinon null\",\"exercises\":[{\"name\":\"nom de l'exercice\",\"weight\":nombre_en_kg_ou_null,\"sets\":entier_ou_null,\"reps\":entier_ou_null}]}. "+
-    "Convertis les livres (lb/lbs) en kg (1 lb = 0.45 kg, arrondi). Pour '3x10' -> sets:3, reps:10. N'invente aucun exercice absent. Réponds UNIQUEMENT le JSON.";
-  resizeImg(file,1200).then(b64=>geminiCall([{text:prompt},{inline_data:{mime_type:"image/jpeg",data:b64}}],true)).then(t=>{
+  geminiCall(parts,true).then(t=>{
     let data;try{data=JSON.parse(t);}catch(e){throw new Error("JSON illisible");}
     const arr=(Array.isArray(data)?data:(data.exercises||data.exercices||[])).filter(x=>x&&x.name);
     if(!arr.length)throw new Error("Aucun exercice détecté");
@@ -2539,6 +2632,16 @@ function importWorkoutShot(file){
     if(msg)msg.textContent="✅ "+arr.length+" exercice"+(arr.length>1?"s":"")+" ajouté"+(arr.length>1?"s":"")+" — vérifie et enregistre.";
     toast(arr.length+" exercice"+(arr.length>1?"s":"")+" importé"+(arr.length>1?"s":"")+" ✅");
   }).catch(e=>{console.error(e);let m=(e&&e.message)||"";if(/not found|404/i.test(m))m="Modèle IA indisponible";else if(/API key|PERMISSION|403/i.test(m))m="Clé refusée";if(msg)msg.textContent="Échec : "+m.slice(0,60);toast("Échec : "+m.slice(0,50));});
+}
+function importWorkoutShot(file){
+  if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages ⚙️");go("settings");return;}
+  resizeImg(file,1200).then(b64=>applyWorkoutAI([{text:WORKOUT_PROMPT},{inline_data:{mime_type:"image/jpeg",data:b64}}])).catch(()=>toast("Image illisible"));
+}
+function importWorkoutText(){
+  if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages ⚙️");go("settings");return;}
+  const ta=document.getElementById("wTextInput");const txt=(ta&&ta.value||"").trim();
+  if(!txt){toast("Colle d'abord tes notes");return;}
+  applyWorkoutAI([{text:WORKOUT_PROMPT+"\n\nNotes de la séance:\n"+txt.slice(0,4000)}]);
 }
 function renderFinance(){
   const el=document.getElementById("financeBody");if(!el)return;
@@ -2698,7 +2801,7 @@ function pushNow(){
     .catch(e=>{console.error(e);setCloudDot("err","Erreur sync");});
   if(typeof syncProfile==="function")syncProfile();
 }
-function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[],settings:d.settings||{},quiz:d.quiz||null,social:d.social||null,finance:d.finance||null,exercises:d.exercises||[],wallet:d.wallet||null,shieldDays:d.shieldDays||[],settledChallenges:d.settledChallenges||{}};}
+function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[],settings:d.settings||{},quiz:d.quiz||null,social:d.social||null,finance:d.finance||null,exercises:d.exercises||[],wallet:d.wallet||null,shieldDays:d.shieldDays||[],settledChallenges:d.settledChallenges||{},escrowedChallenges:d.escrowedChallenges||{},refundedChallenges:d.refundedChallenges||{}};}
 
 /* ---- auth actions ---- */
 function authErr(e){
@@ -2861,7 +2964,8 @@ const GK_HASH="me-gate-hash";           // hash du code attendu (cache local)
 const GK_OK="me-gate-ok";               // "1" = cet appareil est déverrouillé
 const GK_OKHASH="me-gate-okhash";       // hash avec lequel cet appareil a été déverrouillé
 function gateHash(s){let h=5381;s=String(s);for(let i=0;i<s.length;i++)h=((h*33)^s.charCodeAt(i))>>>0;return "h"+h.toString(36);}
-function gateExpected(){return localStorage.getItem(GK_HASH)||gateHash(GATE_DEFAULT);}
+// code fixe 2468 pour tout le monde (plus de personnalisation ni de synchro cloud)
+function gateExpected(){return gateHash(GATE_DEFAULT);}
 function gateShowStep(step){ // "code" | "name"
   const g=document.getElementById("gate");if(!g)return;
   g.style.display="grid";
@@ -2875,7 +2979,7 @@ function showGate(){gateShowStep("code");}
 function hideGate(){const g=document.getElementById("gate");if(g)g.style.display="none";}
 function gateUnlocked(){return localStorage.getItem(GK_OK)==="1"&&localStorage.getItem(GK_OKHASH)===gateExpected();}
 /* après un déverrouillage : demander le prénom si pas encore défini, sinon ouvrir l'app */
-function afterUnlock(){if(!userName())gateShowStep("name");else {hideGate();maybeTuto();}}
+function afterUnlock(){hideGate();maybeTuto();}
 function saveGateName(){
   const i=document.getElementById("gateNameInput");
   const v=(i&&i.value||"").trim().slice(0,24);
@@ -2890,23 +2994,8 @@ function gateSubmit(){
     if(err)err.textContent="";afterUnlock();
   }else{if(err)err.textContent="Code incorrect";if(i){i.value="";i.focus();}}
 }
-function initGate(){if(gateUnlocked())afterUnlock();else showGate();gateCloudSync();}
-/* lit le code partagé dans le cloud (doc public meta/access) et l'applique */
-function gateCloudSync(){
-  try{
-    if(typeof firebase==="undefined"||!cloud.ready)return;
-    firebase.firestore().collection("meta").doc("access").get().then(d=>{
-      if(d&&d.exists&&d.data()&&d.data().hash){
-        const h=d.data().hash;
-        localStorage.setItem(GK_HASH,h);
-        // si le code a changé ailleurs, on reverrouille cet appareil
-        if(localStorage.getItem(GK_OK)==="1"&&localStorage.getItem(GK_OKHASH)!==h){
-          localStorage.removeItem(GK_OK);showGate();
-        }
-      }
-    }).catch(()=>{});
-  }catch(e){}
-}
+function initGate(){if(gateUnlocked())afterUnlock();else showGate();}
+function gateCloudSync(){/* désactivé : code fixe 2468 */}
 function changeAccessCode(){
   const inp=document.getElementById("newAccessCode"),msg=document.getElementById("accessMsg");
   const v=(inp&&inp.value||"").trim();
@@ -2923,75 +3012,99 @@ function changeAccessCode(){
   }
 }
 
-/* ===== Tuto animé de premier lancement ===== */
-const TUTO=[
-`<div class="tt-hero">🏆</div>
- <div class="tt-title">Bienvenue dans Mon Espace</div>
- <div class="tt-body">Ton appli perso pour devenir la <b>meilleure version de toi</b> — comme un jeu vidéo, sauf que le héros, c'est <b>toi</b>.<br>Habitudes, muscu, objectifs, quiz, finances… tout te fait <b>monter de niveau</b>.</div>`,
-`<div class="tt-gauge"><span>82</span></div>
- <div class="tt-title">La Note d'Homme Productif</div>
- <div class="tt-body">Ta note <b>du jour</b>, sur 100. Elle mesure tes efforts <b>d'aujourd'hui</b> : habitudes cochées, séance, journal, objectifs.<br><b>Chaque jour repart de zéro</b>, et un coach te chambre selon ta note 😏</div>
- <div class="tt-sub">Elle décide aussi de ta <b>paie de billets</b> du jour et de ton rang au classement.</div>`,
-`<div style="width:100%;max-width:260px">
-   <div class="tt-stat"><span class="ic">💪</span><span class="nm">Force</span><div class="bar"><i style="--w:85%;background:#f59e0b"></i></div></div>
-   <div class="tt-stat"><span class="ic">🎯</span><span class="nm">Discipline</span><div class="bar"><i style="--w:68%;background:#2563eb"></i></div></div>
-   <div class="tt-stat"><span class="ic">🧠</span><span class="nm">Clarté</span><div class="bar"><i style="--w:58%;background:#7c3aed"></i></div></div>
-   <div class="tt-stat"><span class="ic">🧭</span><span class="nm">Vision</span><div class="bar"><i style="--w:44%;background:#10b981"></i></div></div>
- </div>
- <div class="tt-title">Tes 4 Stats de Vie</div>
- <div class="tt-body">Elles s'accumulent <b>à vie</b> et ne repartent jamais à zéro : c'est ta <b>fiche de perso</b>.<br>Chaque action nourrit une stat — muscu → 💪 Force, journal & quiz → 🧠 Clarté, objectifs → 🧭 Vision…</div>`,
-`<div class="tt-evo"><span>🥚</span><span class="arr">→</span><span>🧒</span><span class="arr">→</span><span>💪</span><span class="arr">→</span><span>🦸</span></div>
- <div class="tt-title">Ton Avatar évolue</div>
- <div class="tt-body">Il grandit sur <b>10 niveaux</b> (Larve → Divin) selon le <b>total de tes 4 stats</b>.<br>Plus tu progresses, plus il se transforme — et chaque niveau te verse une <b>prime de billets 💵</b>.</div>
- <div class="tt-sub">Tu peux même générer un avatar à ton effigie depuis un selfie 📸</div>`,
-`<div class="tt-flame">🔥</div>
- <div class="tt-title">Ton Élan</div>
- <div class="tt-body">Il mesure ta <b>régularité</b> sur les 14 derniers jours : il <b>monte</b> les jours où tu agis, et <b>redescend</b> si tu glandes.<br>C'est ton <b>rythme</b>, pas ton intensité — mieux vaut un peu chaque jour qu'énormément une seule fois.</div>`,
-`<div class="tt-title" style="margin-top:0">Comment tout est lié 🔗</div>
- <div class="tt-flow">
-   <div class="tt-box act">🎬 Tes actions du jour<small>cocher une habitude, une séance, un quiz…</small></div>
-   <div class="tt-arrow">▾ ▾ ▾</div>
-   <div class="tt-box note">📊 Note du jour<small>aujourd'hui seulement, repart à zéro demain</small></div>
-   <div class="tt-box elan">🔥 Ton Élan<small>ta régularité sur 14 jours</small></div>
-   <div class="tt-box stat">📈 Tes Stats de vie<small>s'accumulent à vie</small></div>
-   <div class="tt-arrow">▾</div>
-   <div class="tt-box ava">🦸 Ton Avatar<small>évolue avec le total de tes stats</small></div>
- </div>
- <div class="tt-sub">Une même action fait <b>3 choses d'un coup</b> : elle booste ta note du jour, garde ton élan vivant, et fait grossir tes stats (donc ton avatar).</div>`,
-`<div class="tt-title" style="margin-top:0">Tout ce que tu peux faire</div>
- <div class="tt-grid">
-   <div class="tt-feat"><span class="e">✅</span>Habitudes<small> bonnes &amp; mauvaises</small></div>
-   <div class="tt-feat"><span class="e">🏋️</span>Muscu<small> + import photo IA</small></div>
-   <div class="tt-feat"><span class="e">🎯</span>Objectifs<small> manuels ou auto</small></div>
-   <div class="tt-feat"><span class="e">🧩</span>Quiz<small> 10 QCM / jour</small></div>
-   <div class="tt-feat"><span class="e">💰</span>Finance<small> patrimoine + IA</small></div>
-   <div class="tt-feat"><span class="e">📓</span>Journal<small> humeur du jour</small></div>
- </div>`,
-`<div class="tt-title" style="margin-top:0">Joue avec tes potes 😈</div>
- <div class="tt-grid">
-   <div class="tt-feat"><span class="e">👥</span>Classement<small> entre amis</small></div>
-   <div class="tt-feat"><span class="e">🛒</span>Boutique<small> titres, auras, thèmes</small></div>
-   <div class="tt-feat"><span class="e">😴</span>Sorts<small> malus / bonus</small></div>
-   <div class="tt-feat"><span class="e">💰</span>Défis-paris<small> le gagnant rafle tout</small></div>
- </div>
- <div class="tt-sub">Tes <b>billets 💵</b> (gagnés en montant de niveau et chaque jour) servent à briller… ou à saboter tes amis.</div>`,
-`<div class="tt-hero">🚀</div>
- <div class="tt-title">C'est parti !</div>
- <div class="tt-body">Commence par créer <b>2-3 habitudes</b> et coche-les aujourd'hui. Reviens chaque jour : c'est la <b>régularité</b> qui te fait monter.<br>Bon voyage 💪</div>`
-];
-let tutoI=0;
-function startTuto(){tutoI=0;const t=document.getElementById("tuto");if(t){t.style.display="grid";renderTutoSlide();}}
-function renderTutoSlide(){
-  const s=document.getElementById("tutoSlide");if(!s)return;
-  s.innerHTML=TUTO[tutoI];
-  document.getElementById("tutoDots").innerHTML=TUTO.map((_,i)=>`<i class="${i===tutoI?'on':''}"></i>`).join("");
-  const prev=document.getElementById("tutoPrev"),next=document.getElementById("tutoNext");
-  if(prev)prev.style.visibility=tutoI===0?"hidden":"visible";
-  if(next)next.textContent=tutoI===TUTO.length-1?"Commencer 🚀":"Suivant →";
+/* ===== Onboarding (compte + prénom) puis Tour guidé interactif ===== */
+function obErr(msg){const e=document.getElementById("obErr");if(e)e.textContent=msg||"";}
+function startOnboarding(){
+  const t=document.getElementById("tuto");if(!t)return;
+  document.getElementById("obAccount").style.display="block";
+  document.getElementById("obName").style.display="none";
+  obErr("");t.style.display="grid";
+  setTimeout(()=>{const i=document.getElementById("obEmail");if(i)i.focus();},80);
 }
-function tutoGo(d){tutoI+=d;if(tutoI>=TUTO.length){endTuto();return;}if(tutoI<0)tutoI=0;renderTutoSlide();}
-function endTuto(){localStorage.setItem("me-tuto-done","1");const t=document.getElementById("tuto");if(t)t.style.display="none";}
-function maybeTuto(){if(localStorage.getItem("me-tuto-done")!=="1")startTuto();}
+function onboardSignup(){
+  const email=(document.getElementById("obEmail").value||"").trim();
+  const pass=document.getElementById("obPass").value;
+  obErr("");
+  if(typeof firebase==="undefined"||!cloud.ready){obErr("Connexion indisponible — réessaie plus tard.");return;}
+  firebase.auth().createUserWithEmailAndPassword(email,pass)
+    .then(()=>{toast("Compte créé ✓");
+      document.getElementById("obAccount").style.display="none";
+      const n=document.getElementById("obName");n.style.display="block";
+      const ni=document.getElementById("obNameInput");if(ni){ni.value=userName();setTimeout(()=>ni.focus(),60);}})
+    .catch(err=>obErr(authErr(err)));
+}
+function onboardLogin(){
+  const email=(document.getElementById("obEmail").value||"").trim();
+  const pass=document.getElementById("obPass").value;
+  obErr("");
+  if(typeof firebase==="undefined"||!cloud.ready){obErr("Connexion indisponible — réessaie plus tard.");return;}
+  // déjà un compte -> on connecte directement, sans prénom ni tour
+  firebase.auth().signInWithEmailAndPassword(email,pass)
+    .then(()=>{toast("Connecté ✓");finishOnboarding();})
+    .catch(err=>obErr(authErr(err)));
+}
+function saveOnboardName(){
+  const v=(document.getElementById("obNameInput").value||"").trim().slice(0,24);
+  setUserName(v); // prénom + pseudo ami d'un coup
+  document.getElementById("tuto").style.display="none";renderHome();
+  startTour(); // enchaîne sur le tour guidé
+}
+function finishOnboarding(){localStorage.setItem("me-tuto-done","1");const t=document.getElementById("tuto");if(t)t.style.display="none";}
+function maybeTuto(){
+  if(localStorage.getItem("me-tuto-done")==="1")return;
+  if(cloud.uid){ // déjà connecté -> on saute la création de compte
+    if(!userName()){startOnboarding();document.getElementById("obAccount").style.display="none";document.getElementById("obName").style.display="block";setTimeout(()=>document.getElementById("obNameInput").focus(),80);}
+    else startTour();
+  }else startOnboarding();
+}
+
+/* ---- Tour guidé : bulles qui pointent les vrais éléments ---- */
+const TOUR=[
+ {sel:"#homeScore",view:"home",t:"Ta Note du jour 📊",d:"Ta <b>Note d'Homme Productif</b> sur 100, pour <b>aujourd'hui</b> seulement — elle repart à zéro chaque jour et mesure tes efforts du jour (habitudes, séance, journal…)."},
+ {sel:"#homeAvatar",t:"Ton Avatar 🦸",d:"Il <b>évolue sur 10 niveaux</b> (Larve → Divin) selon le <b>total de tes 4 stats</b>. Chaque niveau te verse une prime de billets 💵."},
+ {sel:"#homeMomentum",t:"Ton Élan 🔥",d:"Ta <b>régularité</b> sur 14 jours : il monte les jours où tu agis, redescend si tu glandes. C'est ton rythme, pas ton intensité."},
+ {sel:"#homeStats",t:"Tes Stats de vie 📈",d:"Force, Discipline, Clarté, Vision — elles s'<b>accumulent à vie</b>. Chaque action en nourrit une, et leur total fait grandir ton avatar."},
+ {sel:"#homeWallet",t:"Tes billets 💵",d:"Gagnés en montant de niveau et chaque jour. Dépense-les en <b>boutique</b>, ou pour piéger tes potes 😈."},
+ {sel:'nav.tabs button[data-v="habits"]',t:"Tes Habitudes ✅",d:"Le cœur de l'app : crée tes routines ici (ex. « Sport », « Lire 20 min »), et coche-les chaque jour."},
+ {sel:'nav.tabs button[data-v="gym"]',t:"Muscu 🏋️",d:"Note tes séances — ou importe-les par <b>photo</b> ou <b>texte collé</b>. Une courbe suit ta progression de poids."},
+ {sel:'nav.tabs button[data-v="quiz"]',t:"Quiz 🧩",d:"10 QCM par jour sur le thème que tu veux, pour muscler ta 🧠 Clarté. Tes ratées reviennent le lendemain."},
+ {sel:'nav.tabs button[data-v="amis"]',t:"Amis 👥",d:"Classement entre potes, <b>défis-paris</b> 💰 (le gagnant rafle la mise) et <b>sorts</b> 😈 (taxe, bouclier, tournée)."},
+ {sel:null,t:"À toi de jouer 🚀",d:"Commence par créer <b>2-3 habitudes</b> et coche-les aujourd'hui. Reviens chaque jour — c'est la régularité qui te fait monter !"}
+];
+let tourI=0;
+function startTour(){tourI=0;go("home");const t=document.getElementById("tour");if(t)t.style.display="block";setTimeout(showTourStep,320);}
+function showTourStep(){
+  const s=TOUR[tourI];if(!s)return endTour();
+  if(s.view)go(s.view);
+  document.getElementById("tourTipBody").innerHTML=`<h4>${s.t}</h4><p>${s.d}</p>`;
+  document.getElementById("tourCount").textContent=(tourI+1)+" / "+TOUR.length;
+  document.getElementById("tourNextBtn").textContent=tourI===TOUR.length-1?"Terminer ✓":"Suivant →";
+  const hole=document.getElementById("tourHole"),tip=document.getElementById("tourTip");
+  const el=s.sel?document.querySelector(s.sel):null;
+  if(el){
+    el.scrollIntoView({block:"center",behavior:"smooth"});
+    setTimeout(()=>{const r=el.getBoundingClientRect();positionHole(hole,r);positionTip(tip,r);},370);
+  }else{
+    hole.style.display="none";
+    tip.style.width=Math.min(320,innerWidth-32)+"px";
+    tip.style.left=(innerWidth/2-Math.min(320,innerWidth-32)/2)+"px";
+    tip.style.top=Math.max(40,innerHeight/2-90)+"px";
+  }
+}
+function positionHole(hole,r){const p=8;hole.style.display="block";hole.style.left=(r.left-p)+"px";hole.style.top=(r.top-p)+"px";hole.style.width=(r.width+2*p)+"px";hole.style.height=(r.height+2*p)+"px";}
+function positionTip(tip,r){
+  const vw=innerWidth,vh=innerHeight,tw=Math.min(320,vw-32);
+  tip.style.width=tw+"px";
+  const th=tip.offsetHeight||170;
+  let top=r.bottom+14;if(top+th>vh-12)top=r.top-th-14;if(top<12)top=12;
+  let left=r.left+r.width/2-tw/2;left=Math.max(12,Math.min(vw-tw-12,left));
+  tip.style.left=left+"px";tip.style.top=top+"px";
+}
+function tourNext(){tourI++;if(tourI>=TOUR.length){endTour();return;}showTourStep();}
+function endTour(){localStorage.setItem("me-tuto-done","1");const t=document.getElementById("tour");if(t)t.style.display="none";}
+// entrée depuis Réglages : rejoue juste le tour guidé
+function startTuto(replay){if(replay){startTour();}else{startOnboarding();}}
+window.addEventListener("resize",()=>{const t=document.getElementById("tour");if(t&&t.style.display==="block")showTourStep();});
 
 renderAll();
 setCloudDot("off",getCfg()?"Non connecté":"Hors-ligne");
