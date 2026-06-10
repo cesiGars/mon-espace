@@ -354,6 +354,17 @@
   .exchip button{border:none;background:transparent;color:var(--accent);font-size:13px;cursor:pointer;padding:0;line-height:1;opacity:.7}
   .exchip button:hover{opacity:1}
   #progEx{width:100%}
+  /* ===== Bloc C : sorts entre amis ===== */
+  .fx-card{display:flex;align-items:center;gap:12px;border-radius:16px;padding:12px 14px;margin:8px 0;border:1px solid var(--line)}
+  .fx-bad{background:linear-gradient(135deg,#fff1f1,#ffe4e4);border-color:#f3b4b4}
+  .fx-good{background:linear-gradient(135deg,#eafaf1,#dcf5e6);border-color:#a8e0c0}
+  .fx-card .fx-emoji{font-size:26px;flex:none}
+  .fx-card .fx-main{flex:1;min-width:0}
+  .fx-card .fx-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .fx-card .fx-act{border:none;border-radius:11px;padding:9px 12px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit;background:#c0392b;color:#fff;white-space:nowrap}
+  .fx-friend{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+  .fx-friend .fx-fn{flex:1;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fx-friend .btn{flex:none}
   /* ===== Portefeuille & Boutique ===== */
   .wallet{display:flex;align-items:center;justify-content:space-between;gap:10px;
     background:linear-gradient(135deg,#1f2937,#111827);color:#fff;border-radius:18px;
@@ -489,6 +500,7 @@
   <section class="view active" id="view-home">
     <div class="hero" id="homeScore"></div>
     <div id="homeWallet"></div>
+    <div id="homeEffects"></div>
     <h2 class="section-title">Ton avatar</h2>
     <div class="dash-card" id="homeAvatar"></div>
     <input type="file" id="selfieFile" accept="image/*" capture="user" style="display:none" onchange="onSelfie(event)">
@@ -575,7 +587,12 @@
       <hr class="sep">
       <label class="fld">Exercices <span class="dim" style="font-weight:400">— choisis dans ta liste ou tape un nouveau</span></label>
       <div id="exRows"></div>
-      <button class="btn ghost sm" onclick="addExRow()">+ Exercice</button>
+      <div class="row" style="margin-top:6px">
+        <button class="btn ghost sm" onclick="addExRow()">+ Exercice</button>
+        <button class="btn ghost sm" onclick="pickWorkoutShot()">📷 Importer une capture</button>
+      </div>
+      <div id="wShotMsg" class="dim" style="margin-top:6px"></div>
+      <input type="file" id="wShotInput" accept="image/*" capture="environment" style="display:none" onchange="onWorkoutShot(event)">
       <button class="btn full" style="margin-top:12px" onclick="saveSession()">Enregistrer la séance</button>
     </div>
 
@@ -807,14 +824,14 @@ const BAKED_CONFIG = {
 const KEY="mon-espace-v1";
 let DB=load();
 function load(){
-  try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);d.settings=d.settings||{};d.quiz=d.quiz||null;d.social=d.social||null;d.finance=d.finance||null;d.exercises=d.exercises||[];return d;}}catch(e){}
-  return {habits:[],sessions:[],goals:[],entries:[],settings:{},quiz:null,social:null,finance:null,exercises:[]};
+  try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);d.settings=d.settings||{};d.quiz=d.quiz||null;d.social=d.social||null;d.finance=d.finance||null;d.exercises=d.exercises||[];d.shieldDays=d.shieldDays||[];return d;}}catch(e){}
+  return {habits:[],sessions:[],goals:[],entries:[],settings:{},quiz:null,social:null,finance:null,exercises:[],shieldDays:[]};
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(DB));pushCloud();}
 /* espace vide : on ne garde QUE la clé Gemini (pas le selfie/avatar, qui appartiennent au compte) */
 function blankDB(){
   const gk=(typeof DB!=="undefined"&&DB.settings&&DB.settings.geminiKey)||localStorage.getItem("me-gemini-key")||"";
-  return {habits:[],sessions:[],goals:[],entries:[],settings:gk?{geminiKey:gk}:{},quiz:null,social:null,finance:null,exercises:[],ownerUid:null};
+  return {habits:[],sessions:[],goals:[],entries:[],settings:gk?{geminiKey:gk}:{},quiz:null,social:null,finance:null,exercises:[],shieldDays:[],ownerUid:null};
 }
 /* remet l'espace local à zéro (mémoire + localStorage) pour un autre compte */
 function wipeLocal(){
@@ -955,11 +972,13 @@ function delHabit(id){
   DB.habits=DB.habits.filter(x=>x.id!==id);save();renderHabits();renderHome();
 }
 function streakOf(h){return h.freq==="weekly"?weekStreak(h):dailyStreak(h);}
+// un jour "compte" pour la streak s'il est fait OU protégé par un Bouclier anti-échec
+function dayCovered(h,key){return !!h.done[key]||(DB.shieldDays||[]).indexOf(key)>=0;}
 function dailyStreak(h){
   let s=0;const d=new Date();
-  // si pas fait aujourd'hui, on compte à partir d'hier
-  if(!h.done[todayKey(d)])d.setDate(d.getDate()-1);
-  while(h.done[todayKey(d)]){s++;d.setDate(d.getDate()-1);}
+  // si pas couvert aujourd'hui, on compte à partir d'hier
+  if(!dayCovered(h,todayKey(d)))d.setDate(d.getDate()-1);
+  while(dayCovered(h,todayKey(d))){s++;d.setDate(d.getDate()-1);}
   return s;
 }
 function weekStreak(h){
@@ -1302,6 +1321,7 @@ function renderHome(){
   grantLevelPrimes();
   renderGameHome();
   renderWallet();
+  renderEffectsNotice();
   // habitudes du jour
   const hh=document.getElementById("homeHabits");
   if(!DB.habits.length){
@@ -1454,6 +1474,7 @@ function dayScore(){
   if(DB.sessions.some(x=>x.date===tk))s+=25;
   if(DB.entries.some(x=>x.date===tk))s+=20;
   if(DB.goals.some(g=>g.created===tk||g.doneDate===tk))s+=15;
+  s=Math.round(s*effectMultiplier()); // malus/bonus reçus des amis (Bloc C)
   return Math.max(0,Math.min(100,s));
 }
 function gradeOf(s){
@@ -2078,9 +2099,94 @@ function startSocial(){
     cloud.chOut=fs().collection("challenges").where("from","==",cloud.uid).onSnapshot(qs=>{
       CH.outgoing=qs.docs.map(d=>Object.assign({id:d.id},d.data()));renderAmis();
     },e=>console.error(e));
+    // effets reçus (Bloc C : malus / bonus entre amis)
+    if(cloud.efIn)cloud.efIn();
+    cloud.efIn=fs().collection("effects").where("to","==",cloud.uid).onSnapshot(qs=>{
+      EFFECTS.incoming=qs.docs.map(d=>Object.assign({id:d.id},d.data()));
+      applyShields();          // enregistre les jours protégés
+      syncProfile();           // re-pousse ma note (malus/bonus pris en compte)
+      renderHome();renderAmis();maybeEffectBanner();
+    },e=>console.error(e));
   }catch(e){console.error(e);}
 }
-function stopSocial(){if(cloud.chIn){cloud.chIn();cloud.chIn=null;}if(cloud.chOut){cloud.chOut();cloud.chOut=null;}CH={incoming:[],outgoing:[]};}
+function stopSocial(){if(cloud.chIn){cloud.chIn();cloud.chIn=null;}if(cloud.chOut){cloud.chOut();cloud.chOut=null;}if(cloud.efIn){cloud.efIn();cloud.efIn=null;}CH={incoming:[],outgoing:[]};EFFECTS={incoming:[]};}
+
+/* ============================================================
+   BLOC C — Sorts entre amis (malus / bonus) via Firestore "effects"
+   ============================================================ */
+let EFFECTS={incoming:[]};
+const FX={
+  taxe:    {cost:10000,emoji:"😴",label:"Taxe de la Flemme"},
+  tournee: {cost:30000,emoji:"🍻",label:"Tournée Générale"},
+  bouclier:{cost:15000,emoji:"🛡️",label:"Bouclier anti-échec"}
+};
+function activeIncoming(){const now=Date.now();return (EFFECTS.incoming||[]).filter(e=>e&&e.status==="active"&&(!e.expiresAt||e.expiresAt>now));}
+function effectMultiplier(){let m=1;activeIncoming().forEach(e=>{if(e.type==="taxe")m*=0.5;else if(e.type==="tournee")m*=1.2;});return m;}
+function activeTaxe(){return activeIncoming().find(e=>e.type==="taxe");}
+function hasShield(){return activeIncoming().some(e=>e.type==="bouclier");}
+// enregistre le jour du jour comme protégé si un bouclier est actif
+function applyShields(){
+  if(hasShield()){DB.shieldDays=DB.shieldDays||[];const tk=todayKey();if(DB.shieldDays.indexOf(tk)<0){DB.shieldDays.push(tk);save();}}
+}
+/* --- lancer un sort sur un ami --- */
+function castEffect(type,toUid){
+  if(!cloud.uid){toast("Connecte-toi d'abord (Réglages)");return;}
+  const def=FX[type];if(!def)return;const w=WALLET();const toName=friendName(toUid);
+  if(w.billets<def.cost){toast("Pas assez — il te manque "+fmtBillets(def.cost-w.billets)+" 💵");return;}
+  if(!confirm(def.emoji+" "+def.label+" sur "+toName+" pour "+fmtBillets(def.cost)+" billets ?"))return;
+  w.billets-=def.cost;save();renderHome();
+  fs().collection("effects").add({from:cloud.uid,fromName:(SOC().name||"Un ami"),to:toUid,type,status:"active",day:todayKey(),createdAt:Date.now(),expiresAt:Date.now()+24*3600*1000})
+    .then(()=>{renderAmis();toast(def.emoji+" "+def.label+" envoyé à "+toName+" !");})
+    .catch(e=>{console.error(e);w.billets+=def.cost;save();renderHome();toast("Erreur d'envoi");});
+}
+function castTournee(){
+  if(!cloud.uid){toast("Connecte-toi d'abord (Réglages)");return;}
+  const def=FX.tournee;const w=WALLET();const friends=(SOC().friends||[]);
+  if(!friends.length){toast("Ajoute d'abord des amis");return;}
+  if(w.billets<def.cost){toast("Pas assez — il te manque "+fmtBillets(def.cost-w.billets)+" 💵");return;}
+  if(!confirm("🍻 Tournée Générale (+20% à tes "+friends.length+" amis pendant 24h) pour "+fmtBillets(def.cost)+" billets ?"))return;
+  w.billets-=def.cost;save();renderHome();
+  Promise.all(friends.map(f=>fs().collection("effects").add({from:cloud.uid,fromName:(SOC().name||"Un ami"),to:f.uid,type:"tournee",status:"active",day:todayKey(),createdAt:Date.now(),expiresAt:Date.now()+24*3600*1000})))
+    .then(()=>{renderAmis();toast("🍻 Tournée offerte à tout le monde !");})
+    .catch(e=>{console.error(e);w.billets+=def.cost;save();renderHome();toast("Erreur d'envoi");});
+}
+// payer l'assurance pour annuler une taxe reçue
+function payInsurance(id){
+  const def=FX.taxe;const w=WALLET();
+  if(w.billets<def.cost){toast("Pas assez pour l'assurance ("+fmtBillets(def.cost)+" 💵)");return;}
+  if(!confirm("Payer "+fmtBillets(def.cost)+" billets pour annuler la Taxe de la Flemme ?"))return;
+  w.billets-=def.cost;save();renderHome();
+  fs().collection("effects").doc(id).set({status:"cancelled"},{merge:true})
+    .then(()=>{renderHome();toast("Assurance payée — malus annulé 🛡️");})
+    .catch(e=>{console.error(e);w.billets+=def.cost;save();renderHome();toast("Erreur");});
+}
+/* --- affichage des effets actifs sur l'accueil --- */
+function renderEffectsNotice(){
+  const el=document.getElementById("homeEffects");if(!el)return;
+  const act=activeIncoming();
+  if(!act.length){el.innerHTML="";return;}
+  el.innerHTML=act.map(e=>{
+    const from=esc(e.fromName||"Un ami");
+    if(e.type==="taxe")return `<div class="fx-card fx-bad"><span class="fx-emoji">😴</span><div class="fx-main"><b>${from} t'a mis une Taxe de la Flemme</b><div class="fx-sub">Ta Note du jour est à <b>−50%</b> (moins de billets, chute au classement). Paie l'assurance pour annuler.</div></div><button class="fx-act" onclick="payInsurance('${e.id}')">Assurance ${fmtBillets(FX.taxe.cost)} 💵</button></div>`;
+    if(e.type==="tournee")return `<div class="fx-card fx-good"><span class="fx-emoji">🍻</span><div class="fx-main"><b>${from} a payé une tournée !</b><div class="fx-sub"><b>+20%</b> sur ta Note du jour pendant 24h. Profite 🚀</div></div></div>`;
+    if(e.type==="bouclier")return `<div class="fx-card fx-good"><span class="fx-emoji">🛡️</span><div class="fx-main"><b>${from} t'a offert un Bouclier</b><div class="fx-sub">Ta série (streak) est <b>protégée aujourd'hui</b> même si tu rates. Merci à lui !</div></div></div>`;
+    return "";
+  }).join("");
+}
+/* --- bannière à l'arrivée d'un nouveau sort --- */
+function seenEffects(){try{return JSON.parse(localStorage.getItem("me-fx-seen")||"[]");}catch(e){return [];}}
+function markSeen(id){const s=seenEffects();if(s.indexOf(id)<0){s.push(id);localStorage.setItem("me-fx-seen",JSON.stringify(s.slice(-100)));}}
+function maybeEffectBanner(){
+  const b=document.getElementById("challengeBanner");if(!b)return;
+  const seen=seenEffects();
+  const fresh=activeIncoming().find(e=>seen.indexOf(e.id)<0);
+  if(!fresh)return;
+  markSeen(fresh.id);
+  const def=FX[fresh.type]||{emoji:"✨",label:"Sort"};
+  const txt=fresh.type==="taxe"?"t'a jeté un sort 😈 (−50% aujourd'hui)":fresh.type==="tournee"?"t'a payé une tournée 🍻 (+20% 24h)":"t'a offert un bouclier 🛡️";
+  b.innerHTML=`<div class="cb-inner" onclick="go('home');hideBanner()"><span class="cb-emoji">${def.emoji}</span><div><b>${esc(fresh.fromName||"Un ami")} ${txt}</b><br><span style="opacity:.9">touche pour voir</span></div><button class="cb-x" onclick="event.stopPropagation();hideBanner()">✕</button></div>`;
+  b.classList.add("show");
+}
 
 function saveName(){const v=(document.getElementById("socName").value||"").trim().slice(0,20);SOC().name=v;save();syncProfile();renderAmis();toast("Pseudo enregistré");}
 function copyCode(){const c=myCode();if(navigator.clipboard)navigator.clipboard.writeText(c);toast("Code copié : "+c);}
@@ -2204,6 +2310,14 @@ function renderAmis(){
     ${pending.length?`<h2 class="section-title">Défis reçus</h2>`+pending.map(c=>`<div class="card ch-pending"><strong>✊ ${esc(c.fromName||"Un ami")} te défie</strong><div style="margin:6px 0">${esc(c.title)} · ${c.days} jours</div><div class="row"><button class="btn" onclick="acceptChallenge('${c.id}')">Accepter 🔥</button><button class="btn subtle" onclick="declineChallenge('${c.id}')">Refuser</button></div></div>`).join(""):""}
     <h2 class="section-title">Classement</h2>
     <div class="card" id="leaderboard"><div class="dim">Chargement…</div></div>
+    <h2 class="section-title">⚔️ Sorts entre amis</h2>
+    <div class="card">
+      <button class="btn full" onclick="castTournee()">🍻 Tournée Générale · +20% à tous tes amis 24h <span style="opacity:.85">(${fmtBillets(FX.tournee.cost)} 💵)</span></button>
+      <p class="dim" style="margin:8px 2px 4px">Lance un sort sur un pote : <b>😴 Taxe</b> (−50% sur sa note du jour) ou offre-lui un <b>🛡️ Bouclier</b> (protège sa série).</p>
+      ${(s.friends||[]).length?(s.friends||[]).map(f=>`<div class="fx-friend"><span class="fx-fn">${esc(f.name)}</span>
+        <button class="btn subtle sm" onclick="castEffect('taxe','${f.uid}')">😴 ${fmtBillets(FX.taxe.cost)}</button>
+        <button class="btn ghost sm" onclick="castEffect('bouclier','${f.uid}')">🛡️ ${fmtBillets(FX.bouclier.cost)}</button></div>`).join(""):'<div class="dim">Ajoute des amis pour leur lancer des sorts.</div>'}
+    </div>
     <h2 class="section-title">Défis en cours</h2>
     <div id="challengeForm"></div>
     ${active.length?active.map(challengeCard).join(""):'<div class="card dim">Aucun défi en cours.</div>'}
@@ -2282,6 +2396,36 @@ function importFinanceShot(file){
     if(!n)throw new Error("Aucun compte détecté");
     save();renderFinance();toast(n+" compte"+(n>1?"s":"")+" importé"+(n>1?"s":"")+" ✅");
   }).catch(e=>{console.error(e);let m=(e&&e.message)||"";if(/not found|404/i.test(m))m="Modèle IA indisponible";else if(/API key|PERMISSION|403/i.test(m))m="Clé refusée";toast("Échec : "+m.slice(0,50));});
+}
+/* ---- Import d'une séance de muscu par capture (Gemini Vision) ---- */
+function pickWorkoutShot(){
+  if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages ⚙️");go("settings");return;}
+  document.getElementById("wShotInput").click();
+}
+function onWorkoutShot(ev){const f=ev.target.files[0];ev.target.value="";if(f)importWorkoutShot(f);}
+function importWorkoutShot(file){
+  if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages ⚙️");go("settings");return;}
+  const msg=document.getElementById("wShotMsg");if(msg)msg.textContent="Lecture de ta séance… 🤖";
+  toast("Lecture de ta séance… 🤖");
+  const prompt="Tu lis une photo ou capture de notes de séance de musculation (manuscrites ou app de tracking). "+
+    "Extrais chaque exercice avec son poids, ses séries et ses répétitions. Réponds STRICTEMENT en JSON: "+
+    "{\"name\":\"nom de la séance si présent (ex. Push, Jambes) sinon null\",\"exercises\":[{\"name\":\"nom de l'exercice\",\"weight\":nombre_en_kg_ou_null,\"sets\":entier_ou_null,\"reps\":entier_ou_null}]}. "+
+    "Convertis les livres (lb/lbs) en kg (1 lb = 0.45 kg, arrondi). Pour '3x10' -> sets:3, reps:10. N'invente aucun exercice absent. Réponds UNIQUEMENT le JSON.";
+  resizeImg(file,1200).then(b64=>geminiCall([{text:prompt},{inline_data:{mime_type:"image/jpeg",data:b64}}],true)).then(t=>{
+    let data;try{data=JSON.parse(t);}catch(e){throw new Error("JSON illisible");}
+    const arr=(Array.isArray(data)?data:(data.exercises||data.exercices||[])).filter(x=>x&&x.name);
+    if(!arr.length)throw new Error("Aucun exercice détecté");
+    if(data&&data.name&&!document.getElementById("wName").value.trim())document.getElementById("wName").value=(""+data.name).slice(0,40);
+    arr.forEach(x=>{
+      const w=(x.weight==null||x.weight==="")?"":Number((""+x.weight).replace(/[^0-9.]/g,""))||"";
+      const s=(x.sets==null||x.sets==="")?"":parseInt(x.sets,10)||"";
+      const r=(x.reps==null||x.reps==="")?"":parseInt(x.reps,10)||"";
+      addExRow((""+x.name).slice(0,40),w,s,r);
+    });
+    renderGymExtras();
+    if(msg)msg.textContent="✅ "+arr.length+" exercice"+(arr.length>1?"s":"")+" ajouté"+(arr.length>1?"s":"")+" — vérifie et enregistre.";
+    toast(arr.length+" exercice"+(arr.length>1?"s":"")+" importé"+(arr.length>1?"s":"")+" ✅");
+  }).catch(e=>{console.error(e);let m=(e&&e.message)||"";if(/not found|404/i.test(m))m="Modèle IA indisponible";else if(/API key|PERMISSION|403/i.test(m))m="Clé refusée";if(msg)msg.textContent="Échec : "+m.slice(0,60);toast("Échec : "+m.slice(0,50));});
 }
 function renderFinance(){
   const el=document.getElementById("financeBody");if(!el)return;
@@ -2441,7 +2585,7 @@ function pushNow(){
     .catch(e=>{console.error(e);setCloudDot("err","Erreur sync");});
   if(typeof syncProfile==="function")syncProfile();
 }
-function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[],settings:d.settings||{},quiz:d.quiz||null,social:d.social||null,finance:d.finance||null,exercises:d.exercises||[],wallet:d.wallet||null};}
+function normalize(d){return {habits:d.habits||[],sessions:d.sessions||[],goals:d.goals||[],entries:d.entries||[],settings:d.settings||{},quiz:d.quiz||null,social:d.social||null,finance:d.finance||null,exercises:d.exercises||[],wallet:d.wallet||null,shieldDays:d.shieldDays||[]};}
 
 /* ---- auth actions ---- */
 function authErr(e){
