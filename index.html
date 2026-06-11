@@ -13,29 +13,30 @@
 <link id="manifestLink" rel="manifest">
 <style>
   :root{
-    --bg:#f4f7fc;
-    --card:#ffffff;
-    --ink:#0f172a;
-    --muted:#94a3b8;
-    --line:#e9edf6;
-    --accent:#2563eb;
-    --accent-2:#6366f1;
-    --accent-soft:#e8efff;
-    --grad:linear-gradient(135deg,#3b82f6 0%,#6366f1 100%);
-    --grad-warm:linear-gradient(135deg,#f59e0b,#f97316);
-    --warn:#f59e0b;
-    --shadow:0 1px 2px rgba(15,23,42,.04),0 12px 30px rgba(37,99,235,.08);
-    --radius:20px;
+    --bg:#eceef3;
+    --card:rgba(255,255,255,.74);
+    --ink:#1c1c1e;
+    --muted:#8a8a8f;
+    --line:rgba(60,60,67,.11);
+    --accent:#0a84ff;
+    --accent-2:#5e5ce6;
+    --accent-soft:rgba(10,132,255,.12);
+    --grad:linear-gradient(135deg,#0a84ff 0%,#5e5ce6 100%);
+    --grad-warm:linear-gradient(135deg,#ff9f0a,#ff7a45);
+    --warn:#ff9f0a;
+    --shadow:0 1px 2px rgba(17,24,39,.04),0 16px 40px rgba(17,24,39,.07);
+    --radius:24px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
   body{
     background:
-      radial-gradient(1100px 460px at 50% -260px, rgba(99,102,241,.16), transparent 70%),
+      radial-gradient(820px 520px at 110% -8%, rgba(94,92,230,.12), transparent 58%),
+      radial-gradient(760px 520px at -10% 2%, rgba(10,132,255,.11), transparent 56%),
       var(--bg);
     background-attachment:fixed;
     color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     line-height:1.5;
     -webkit-font-smoothing:antialiased;
     padding-bottom:94px;
@@ -45,9 +46,8 @@
     padding:28px 0 14px;
   }
   header.top h1{
-    font-size:27px;margin:0;font-weight:800;letter-spacing:-.03em;
-    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;
-    display:inline-block;
+    font-size:30px;margin:0;font-weight:800;letter-spacing:-.035em;
+    color:var(--ink);display:inline-block;
   }
   header.top .date{color:var(--muted);font-size:14px;margin-top:2px}
   .greeting{color:var(--muted);font-size:15px;margin-top:4px}
@@ -55,9 +55,9 @@
   /* tabs / nav */
   nav.tabs{
     position:fixed;bottom:0;left:0;right:0;
-    background:rgba(255,255,255,.86);
-    backdrop-filter:saturate(180%) blur(14px);
-    -webkit-backdrop-filter:saturate(180%) blur(14px);
+    background:rgba(248,248,250,.62);
+    backdrop-filter:saturate(180%) blur(28px);
+    -webkit-backdrop-filter:saturate(180%) blur(28px);
     border-top:1px solid var(--line);
     display:flex;justify-content:center;gap:4px;
     padding:8px 8px calc(8px + env(safe-area-inset-bottom));
@@ -87,29 +87,31 @@
   .card{
     background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     box-shadow:var(--shadow);padding:16px;margin-bottom:12px;
+    backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
   }
 
   /* buttons */
   .btn{
-    border:none;border-radius:13px;padding:12px 16px;font-size:15px;font-weight:700;
-    font-family:inherit;cursor:pointer;background:var(--grad);color:#fff;
-    box-shadow:0 6px 16px rgba(37,99,235,.28);transition:filter .15s,transform .08s,box-shadow .15s;
+    border:none;border-radius:14px;padding:12px 16px;font-size:15px;font-weight:600;
+    font-family:inherit;cursor:pointer;background:var(--grad);color:#fff;letter-spacing:-.01em;
+    box-shadow:0 4px 14px rgba(10,132,255,.22);transition:filter .15s,transform .08s,box-shadow .15s;
   }
-  .btn:hover{filter:brightness(1.06)}
+  .btn:hover{filter:brightness(1.05)}
   .btn:active{transform:scale(.96)}
   .btn.ghost{background:var(--accent-soft);color:var(--accent);box-shadow:none}
-  .btn.subtle{background:#f1efe9;color:var(--ink)}
-  .btn.sm{padding:7px 12px;font-size:13px;border-radius:10px}
+  .btn.subtle{background:rgba(120,120,128,.13);color:var(--ink);box-shadow:none}
+  .btn.sm{padding:8px 13px;font-size:13px;border-radius:11px}
   .btn.full{width:100%}
-  .iconbtn{border:none;background:none;cursor:pointer;color:var(--muted);font-size:18px;padding:4px 8px;border-radius:8px}
-  .iconbtn:hover{color:var(--ink);background:#f3f1ec}
+  .iconbtn{border:none;background:none;cursor:pointer;color:var(--muted);font-size:18px;padding:4px 8px;border-radius:9px}
+  .iconbtn:hover{color:var(--ink);background:rgba(120,120,128,.12)}
 
   input,textarea,select{
     font-family:inherit;font-size:15px;color:var(--ink);
-    border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;
-    background:#fff;outline:none;transition:border-color .15s;
+    border:1px solid var(--line);border-radius:13px;padding:12px 13px;width:100%;
+    background:rgba(255,255,255,.55);outline:none;transition:border-color .15s,box-shadow .15s;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   }
-  input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
   textarea{resize:vertical;min-height:90px;line-height:1.55}
   label.fld{display:block;font-size:13px;color:var(--muted);margin:0 2px 5px;font-weight:600}
   .row{display:flex;gap:8px}
@@ -189,7 +191,7 @@
   .auth-status.connected .dot{background:var(--accent)}
 
   /* ====== GAMIFICATION ====== */
-  .dash-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px;animation:rise .4s ease both}
+  .dash-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px;animation:rise .4s ease both;backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%)}
   @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
   .dash-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
   .dash-head strong{font-size:15px}
@@ -227,7 +229,7 @@
   .stat.s-vis .ic2{background:#e6f7ef}
 
   /* hero score + coach */
-  .hero{background:var(--grad);color:#fff;border:none;border-radius:22px;padding:18px;margin-bottom:12px;box-shadow:0 14px 34px rgba(37,99,235,.32);animation:rise .4s ease both}
+  .hero{background:var(--grad);color:#fff;border:none;border-radius:24px;padding:20px;margin-bottom:12px;box-shadow:0 12px 32px rgba(10,132,255,.26);animation:rise .4s ease both}
   .hero-top{display:flex;align-items:center;gap:16px}
   .score-ring{width:94px;height:94px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(#fff var(--p,0%), rgba(255,255,255,.22) 0);transition:background .9s cubic-bezier(.22,1,.36,1)}
   .score-ring .inner{width:78px;height:78px;border-radius:50%;background:#3257d8;display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -394,6 +396,11 @@
   .tour-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:13px}
   .tour-skip{border:none;background:none;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;font-family:inherit}
   .tour-count{font-size:12px;color:var(--muted);font-weight:600}
+  #tourArrow{position:fixed;z-index:10002;font-size:46px;pointer-events:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
+  #tourArrow.t-bottom{left:50%;bottom:14px;transform:translateX(-50%);animation:arrDown 1s ease-in-out infinite}
+  #tourArrow.t-topright{right:10px;top:8px;animation:arrUp 1s ease-in-out infinite}
+  @keyframes arrDown{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(12px)}}
+  @keyframes arrUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
   .install-steps{margin-top:10px;font-size:13.5px;line-height:1.7}
   .install-steps>div{background:var(--accent-soft);border-radius:12px;padding:10px 12px}
   .install-steps .ib{display:inline-block;padding:0 2px}
@@ -598,6 +605,7 @@
 <!-- ===== Tour guidé interactif (coachmarks) ===== -->
 <div id="tour" style="display:none">
   <div id="tourHole"></div>
+  <div id="tourArrow" style="display:none"></div>
   <div id="tourTip">
     <div id="tourTipBody"></div>
     <div class="tour-nav">
@@ -692,7 +700,6 @@
           <select id="goalMetric" onchange="updateGoalTargetUI()">
             <option value="steps">👟 Pas</option>
             <option value="sleepHours">😴 Sommeil</option>
-            <option value="workoutCount">🏋️ Séances</option>
             <option value="activeCalories">🔥 Calories actives</option>
             <option value="screenMinutes">📱 Temps d'écran</option>
           </select>
@@ -788,7 +795,9 @@
 
   <!-- FINANCE -->
   <section class="view" id="view-finance">
-    <h2 class="section-title">Finance · patrimoine</h2>
+    <div style="display:flex;align-items:center;gap:10px;margin:2px 0 4px">
+      <button class="btn ghost sm" onclick="go('settings')" style="padding:7px 12px">← Réglages</button>
+      <h2 class="section-title" style="margin:0">Finance · patrimoine 💰</h2></div>
     <div id="financeBody"></div>
     <input type="file" id="financeFile" accept="image/*" style="display:none" onchange="onFinanceShot(event)">
   </section>
@@ -847,6 +856,13 @@
       <input id="setName" type="text" placeholder="Ton prénom" autocomplete="off">
       <button class="btn full" style="margin-top:8px" onclick="saveSetName()">Enregistrer</button>
       <button class="btn ghost full sm" style="margin-top:8px" onclick="startTuto(true)">▶ Revoir le tuto de présentation</button>
+    </div>
+
+    <h2 class="section-title">Finance 💰</h2>
+    <div class="card">
+      <strong>Suivi de patrimoine</strong>
+      <p class="dim" style="margin-top:4px">Tes comptes, épargne, investissements, crypto — avec import par capture (IA). Rangé ici pour garder l'app simple.</p>
+      <button class="btn full" style="margin-top:8px" onclick="go('finance')">Ouvrir la Finance 💰</button>
     </div>
 
     <h2 class="section-title">Installer l'app 📲</h2>
@@ -940,7 +956,6 @@
   <button data-v="amis"><span class="ic">👥</span>Amis</button>
   <button data-v="journal"><span class="ic">📓</span>Journal</button>
   <button data-v="quiz"><span class="ic">🧩</span>Quiz</button>
-  <button data-v="finance"><span class="ic">💰</span>Finance</button>
 </nav>
 
 <div class="challenge-banner" id="challengeBanner"></div>
@@ -1944,8 +1959,6 @@ function num(v){return (v===undefined||v===null||v==="")?null:Number(v);}
 const HFIELDS=[
   {k:"steps",ic:"👟",l:"Pas",fl:false},
   {k:"sleepHours",ic:"😴",l:"Sommeil",time:true},
-  {k:"workoutCount",ic:"🏋️",l:"Séances",fl:false},
-  {k:"restingHR",ic:"❤️",l:"FC repos",fl:false},
   {k:"activeCalories",ic:"🔥",l:"Calories",fl:false},
   {k:"screenMinutes",ic:"📱",l:"Écran",time:true}
 ];
@@ -3194,17 +3207,56 @@ const TOUR=[
  {sel:'nav.tabs button[data-v="gym"]',t:"Muscu 🏋️",d:"Note tes séances — ou importe-les par <b>photo</b> ou <b>texte collé</b>. Une courbe suit ta progression de poids."},
  {sel:'nav.tabs button[data-v="quiz"]',t:"Quiz 🧩",d:"10 QCM par jour sur le thème que tu veux, pour muscler ta 🧠 Clarté. Tes ratées reviennent le lendemain."},
  {sel:'nav.tabs button[data-v="amis"]',t:"Amis 👥",d:"Classement entre potes, <b>défis-paris</b> 💰 (le gagnant rafle la mise) et <b>sorts</b> 😈 (taxe, bouclier, tournée)."},
+ {install:true,t:"Installe l'app 📲",d:""},
  {sel:null,t:"À toi de jouer 🚀",d:"Commence par créer <b>2-3 habitudes</b> et coche-les aujourd'hui. Reviens chaque jour — c'est la régularité qui te fait monter !"}
 ];
-let tourI=0;
+let tourI=0,deferredInstall=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstall=e;});
+function isStandalone(){return (window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||window.navigator.standalone===true;}
+function platformOS(){const ua=navigator.userAgent||"";if(/iPhone|iPad|iPod/i.test(ua))return "ios";if(/Android/i.test(ua))return "android";return "other";}
 function startTour(){tourI=0;go("home");const t=document.getElementById("tour");if(t)t.style.display="block";setTimeout(showTourStep,320);}
+function tourArrowAt(pos){
+  const a=document.getElementById("tourArrow");if(!a)return;
+  if(!pos){a.style.display="none";return;}
+  a.style.display="block";
+  if(pos==="bottom"){a.textContent="⬇️";a.className="t-bottom";}
+  else if(pos==="topright"){a.textContent="⬆️";a.className="t-topright";}
+}
+function doInstallPrompt(){
+  if(!deferredInstall){toast("Suis les étapes affichées 👆");return;}
+  deferredInstall.prompt();
+  deferredInstall.userChoice.then(()=>{deferredInstall=null;toast("Ajouté à l'écran d'accueil ✅");tourNext();});
+}
 function showTourStep(){
   const s=TOUR[tourI];if(!s)return endTour();
+  if(s.install&&isStandalone()){tourNext();return;} // déjà installée -> on saute
   if(s.view)go(s.view);
-  document.getElementById("tourTipBody").innerHTML=`<h4>${s.t}</h4><p>${s.d}</p>`;
+  const hole=document.getElementById("tourHole"),tip=document.getElementById("tourTip");
   document.getElementById("tourCount").textContent=(tourI+1)+" / "+TOUR.length;
   document.getElementById("tourNextBtn").textContent=tourI===TOUR.length-1?"Terminer ✓":"Suivant →";
-  const hole=document.getElementById("tourHole"),tip=document.getElementById("tourTip");
+  tourArrowAt(null);
+  if(s.install){
+    hole.style.display="none";
+    const os=platformOS();let body;
+    if(deferredInstall){
+      body=`<h4>📲 Installe l'app</h4><p>Ajoute Mon Espace à ton écran d'accueil pour l'ouvrir comme une vraie appli, en plein écran.</p>
+        <button class="btn full" style="margin-top:10px" onclick="doInstallPrompt()">Ajouter à l'écran d'accueil</button>`;
+    }else if(os==="ios"){
+      body=`<h4>📲 Ajoute-la à ton écran</h4><p>1. Touche le bouton <b>Partager</b> ⬆️ tout en <b>bas</b> de Safari (la flèche te montre où 👇).<br>2. Fais défiler et choisis <b>« Sur l'écran d'accueil »</b>.<br>3. Touche <b>Ajouter</b>.</p>`;
+      tourArrowAt("bottom");
+    }else if(os==="android"){
+      body=`<h4>📲 Ajoute-la à ton écran</h4><p>1. Touche le menu <b>⋮</b> en <b>haut à droite</b> de Chrome (la flèche te montre où 👆).<br>2. Choisis <b>« Ajouter à l'écran d'accueil »</b>.</p>`;
+      tourArrowAt("topright");
+    }else{
+      body=`<h4>📲 Installe l'app</h4><p>Dans la barre d'adresse de ton navigateur, clique l'icône <b>⊕ d'installation</b>, puis <b>Installer</b>.</p>`;
+    }
+    document.getElementById("tourTipBody").innerHTML=body;
+    tip.style.width=Math.min(330,innerWidth-32)+"px";
+    tip.style.left=(innerWidth/2-Math.min(330,innerWidth-32)/2)+"px";
+    tip.style.top=(os==="ios")?"60px":Math.max(60,innerHeight/2-120)+"px";
+    return;
+  }
+  document.getElementById("tourTipBody").innerHTML=`<h4>${s.t}</h4><p>${s.d}</p>`;
   const el=s.sel?document.querySelector(s.sel):null;
   if(el){
     el.scrollIntoView({block:"center",behavior:"smooth"});
@@ -3226,7 +3278,7 @@ function positionTip(tip,r){
   tip.style.left=left+"px";tip.style.top=top+"px";
 }
 function tourNext(){tourI++;if(tourI>=TOUR.length){endTour();return;}showTourStep();}
-function endTour(){localStorage.setItem("me-tuto-done","1");const t=document.getElementById("tour");if(t)t.style.display="none";}
+function endTour(){localStorage.setItem("me-tuto-done","1");tourArrowAt(null);const t=document.getElementById("tour");if(t)t.style.display="none";}
 // entrée depuis Réglages : rejoue juste le tour guidé
 function startTuto(replay){if(replay){startTour();}else{startOnboarding();}}
 window.addEventListener("resize",()=>{const t=document.getElementById("tour");if(t&&t.style.display==="block")showTourStep();});
