@@ -397,6 +397,30 @@
   .install-steps{margin-top:10px;font-size:13.5px;line-height:1.7}
   .install-steps>div{background:var(--accent-soft);border-radius:12px;padding:10px 12px}
   .install-steps .ib{display:inline-block;padding:0 2px}
+  /* ===== Alerte animée à la réception d'un sort ===== */
+  #fxAlert{position:fixed;inset:0;z-index:10003;display:none;place-items:center;padding:24px;background:rgba(15,23,42,.62)}
+  #fxAlert.show{display:grid}
+  .fxa-card{position:relative;background:var(--card);border-radius:26px;padding:30px 24px 22px;max-width:340px;width:100%;
+    text-align:center;box-shadow:0 28px 80px rgba(0,0,0,.45);overflow:hidden;animation:fxaPop .5s cubic-bezier(.22,1.5,.5,1) both}
+  .fxa-card.bad{animation:fxaShake .7s both}
+  @keyframes fxaPop{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:none}}
+  @keyframes fxaShake{0%{opacity:0;transform:scale(.6)}35%{opacity:1;transform:scale(1)}45%{transform:translateX(-9px) rotate(-2deg)}55%{transform:translateX(9px) rotate(2deg)}65%{transform:translateX(-7px)}75%{transform:translateX(7px)}85%{transform:translateX(-3px)}100%{transform:none}}
+  .fxa-emoji{font-size:74px;line-height:1;animation:fxaBob 1.2s ease-in-out infinite}
+  @keyframes fxaBob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+  .fxa-title{font-size:22px;font-weight:800;margin:10px 0 6px;line-height:1.2}
+  .fxa-sub{font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:16px}
+  .fxa-confetti span{position:absolute;top:-10px;font-size:18px;animation:fxaFall linear forwards}
+  @keyframes fxaFall{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(420px) rotate(540deg);opacity:0}}
+  /* modale générique (partage) */
+  .modal-back{position:fixed;inset:0;z-index:10003;display:grid;place-items:center;padding:22px;background:rgba(15,23,42,.55)}
+  .modal-card{background:var(--card);border-radius:22px;padding:18px;max-width:340px;width:100%;box-shadow:0 24px 70px rgba(0,0,0,.4)}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  /* séance partagée reçue */
+  .shared-card{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#eef5ff,#e3edff);border:1px solid #c3d6f5;
+    border-radius:16px;padding:12px 14px;margin-bottom:10px}
+  .shared-card .sc-ic{font-size:26px;flex:none}
+  .shared-card .sc-main{flex:1;min-width:0}
+  .shared-card .sc-sub{font-size:12.5px;color:var(--muted)}
   /* visuels animés */
   .tt-hero{font-size:74px;line-height:1;animation:ttBounce 1.6s ease-in-out infinite}
   @keyframes ttBounce{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-12px) rotate(3deg)}}
@@ -688,6 +712,7 @@
   <!-- MUSCU -->
   <section class="view" id="view-gym">
     <datalist id="exDatalist"></datalist>
+    <div id="sharedBox"></div>
     <h2 class="section-title">Nouvelle séance</h2>
     <div class="card">
       <div class="row">
@@ -920,6 +945,16 @@
 
 <div class="challenge-banner" id="challengeBanner"></div>
 <div class="toast" id="toast"></div>
+<!-- alerte animée à la réception d'un sort -->
+<div id="fxAlert"><div id="fxaCard" class="fxa-card"><div id="fxaConfetti" class="fxa-confetti"></div><div id="fxaBody"></div></div></div>
+<!-- modale : choisir à qui partager une séance -->
+<div id="shareModal" class="modal-back" style="display:none">
+  <div class="modal-card">
+    <div class="modal-head"><strong>Partager à…</strong><button class="iconbtn" onclick="closeShare()" style="font-size:20px">✕</button></div>
+    <div id="shareFriends"></div>
+  </div>
+</div>
+<input type="file" id="betProofInput" accept="image/*" style="display:none" onchange="onBetProof(event)">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -1214,11 +1249,11 @@ function renderSessions(){
       return `<tr><td>${esc(e.name)}${pr}</td><td class="num">${e.w||'–'}</td><td class="num">${e.s||'–'}</td><td class="num">${e.r||'–'}</td></tr>`;
     }).join("");
     return `<div class="session">
-      <div class="shead"><span class="d">${esc(s.name)}</span><span class="n">${shortDate(s.date)} <button class="iconbtn" onclick="delSession('${s.id}')">✕</button></span></div>
+      <div class="shead"><span class="d">${esc(s.name)}</span><span class="n">${shortDate(s.date)} <button class="iconbtn" onclick="shareWorkout('${s.id}')" title="Partager à un ami">📤</button> <button class="iconbtn" onclick="delSession('${s.id}')">✕</button></span></div>
       <table class="ex"><tr><th>Exercice</th><th style="text-align:center">kg</th><th style="text-align:center">séries</th><th style="text-align:center">reps</th></tr>${rows}</table>
     </div>`;
   }).join('<hr class="sep">');
-  renderGymExtras();
+  renderGymExtras();renderSharedBox();
 }
 
 /* ---- bibliothèque d'exercices + progression ---- */
@@ -2234,9 +2269,14 @@ function startSocial(){
       syncProfile();           // re-pousse ma note (malus/bonus pris en compte)
       renderHome();renderAmis();maybeEffectBanner();
     },e=>console.error(e));
+    // séances partagées reçues
+    if(cloud.swIn)cloud.swIn();
+    cloud.swIn=fs().collection("sharedWorkouts").where("to","==",cloud.uid).onSnapshot(qs=>{
+      SHARED.incoming=qs.docs.map(d=>Object.assign({id:d.id},d.data()));renderSharedBox();
+    },e=>console.error(e));
   }catch(e){console.error(e);}
 }
-function stopSocial(){if(cloud.chIn){cloud.chIn();cloud.chIn=null;}if(cloud.chOut){cloud.chOut();cloud.chOut=null;}if(cloud.efIn){cloud.efIn();cloud.efIn=null;}CH={incoming:[],outgoing:[]};EFFECTS={incoming:[]};}
+function stopSocial(){if(cloud.chIn){cloud.chIn();cloud.chIn=null;}if(cloud.chOut){cloud.chOut();cloud.chOut=null;}if(cloud.efIn){cloud.efIn();cloud.efIn=null;}if(cloud.swIn){cloud.swIn();cloud.swIn=null;}CH={incoming:[],outgoing:[]};EFFECTS={incoming:[]};SHARED={incoming:[]};}
 
 /* ============================================================
    BLOC C — Sorts entre amis (malus / bonus) via Firestore "effects"
@@ -2303,17 +2343,73 @@ function renderEffectsNotice(){
 /* --- bannière à l'arrivée d'un nouveau sort --- */
 function seenEffects(){try{return JSON.parse(localStorage.getItem("me-fx-seen")||"[]");}catch(e){return [];}}
 function markSeen(id){const s=seenEffects();if(s.indexOf(id)<0){s.push(id);localStorage.setItem("me-fx-seen",JSON.stringify(s.slice(-100)));}}
+// alerte animée plein écran quand un nouveau sort arrive
+const FXA={
+  taxe:{emoji:"😈",cls:"bad",title:"%s vient de te saboter !",sub:"Taxe de la Flemme — ta Note du jour est à <b>−50%</b> aujourd'hui. Paie l'assurance pour annuler.",confetti:false},
+  tournee:{emoji:"🍻",cls:"good",title:"Tournée générale de %s ! 🎉",sub:"<b>+20%</b> sur ta Note du jour pendant 24h. Youhou !",confetti:true},
+  bouclier:{emoji:"🛡️",cls:"good",title:"%s te protège !",sub:"Bouclier anti-échec — ta série (streak) est <b>sauvée aujourd'hui</b>. Merci à lui !",confetti:true}
+};
+function closeFxAlert(){const a=document.getElementById("fxAlert");if(a)a.classList.remove("show");}
 function maybeEffectBanner(){
-  const b=document.getElementById("challengeBanner");if(!b)return;
   const seen=seenEffects();
   const fresh=activeIncoming().find(e=>seen.indexOf(e.id)<0);
   if(!fresh)return;
   markSeen(fresh.id);
-  const def=FX[fresh.type]||{emoji:"✨",label:"Sort"};
-  const txt=fresh.type==="taxe"?"t'a jeté un sort 😈 (−50% aujourd'hui)":fresh.type==="tournee"?"t'a payé une tournée 🍻 (+20% 24h)":"t'a offert un bouclier 🛡️";
-  b.innerHTML=`<div class="cb-inner" onclick="go('home');hideBanner()"><span class="cb-emoji">${def.emoji}</span><div><b>${esc(fresh.fromName||"Un ami")} ${txt}</b><br><span style="opacity:.9">touche pour voir</span></div><button class="cb-x" onclick="event.stopPropagation();hideBanner()">✕</button></div>`;
-  b.classList.add("show");
+  const cfg=FXA[fresh.type];if(!cfg)return;
+  const who=esc(fresh.fromName||"Un pote");
+  // notification navigateur (si activée, utile app en arrière-plan)
+  try{if(typeof notifEnabled==="function"&&notifEnabled())new Notification("Mon Espace",{body:cfg.title.replace("%s",who).replace(/<[^>]+>/g,"")});}catch(e){}
+  const card=document.getElementById("fxaCard");
+  card.className="fxa-card "+(cfg.cls==="bad"?"bad":"");
+  let extra=`<button class="btn full" onclick="closeFxAlert()">OK</button>`;
+  if(fresh.type==="taxe")extra=`<button class="btn full" onclick="payInsurance('${fresh.id}');closeFxAlert()">Payer l'assurance (${fmtBillets(FX.taxe.cost)} 💵)</button><button class="btn ghost full sm" style="margin-top:8px" onclick="closeFxAlert()">Encaisser le coup</button>`;
+  document.getElementById("fxaBody").innerHTML=`<div class="fxa-emoji">${cfg.emoji}</div>
+    <div class="fxa-title">${cfg.title.replace("%s",who)}</div>
+    <div class="fxa-sub">${cfg.sub}</div>${extra}`;
+  const conf=document.getElementById("fxaConfetti");
+  conf.innerHTML=cfg.confetti?Array.from({length:18},()=>{const e=pick(["🎉","✨","🎊","💵","🍻","⭐"]);const l=(Math.random()*100).toFixed(0);const d=(1.4+Math.random()*1.4).toFixed(2);const dl=(Math.random()*0.6).toFixed(2);return `<span style="left:${l}%;animation-duration:${d}s;animation-delay:${dl}s">${e}</span>`;}).join(""):"";
+  document.getElementById("fxAlert").classList.add("show");
 }
+
+/* ===== Partage de séances entre amis (collection sharedWorkouts) ===== */
+let SHARED={incoming:[]};
+function shareWorkout(sid){
+  if(!cloud.uid){toast("Connecte-toi d'abord (Réglages)");return;}
+  const friends=(SOC().friends||[]);
+  if(!friends.length){toast("Ajoute un ami d'abord");return;}
+  if(friends.length===1){doShareWorkout(sid,friends[0].uid);return;}
+  document.getElementById("shareFriends").innerHTML=friends.map(f=>`<button class="btn ghost full" style="margin-bottom:8px" onclick="doShareWorkout('${sid}','${f.uid}')">${esc(f.name)}</button>`).join("");
+  document.getElementById("shareModal").style.display="grid";
+}
+function closeShare(){document.getElementById("shareModal").style.display="none";}
+function doShareWorkout(sid,fuid){
+  const s=DB.sessions.find(x=>x.id===sid);if(!s)return;closeShare();
+  fs().collection("sharedWorkouts").add({from:cloud.uid,fromName:(SOC().name||"Un ami"),to:fuid,name:s.name||"Séance",ex:(s.ex||[]).map(e=>({name:e.name,w:e.w,s:e.s,r:e.r})),createdAt:Date.now()})
+    .then(()=>toast("Séance partagée à "+friendName(fuid)+" 💪")).catch(e=>{console.error(e);toast("Erreur de partage");});
+}
+function renderSharedBox(){
+  const el=document.getElementById("sharedBox");if(!el)return;
+  const list=SHARED.incoming||[];
+  if(!list.length){el.innerHTML="";return;}
+  el.innerHTML=`<h2 class="section-title">Séances reçues 📥</h2>`+list.map(w=>`<div class="shared-card">
+    <span class="sc-ic">💪</span>
+    <div class="sc-main"><b>${esc(w.fromName||"Un ami")} t'a partagé</b><div class="sc-sub">${esc(w.name||"Séance")} · ${(w.ex||[]).length} exo${(w.ex||[]).length>1?"s":""}</div></div>
+    <button class="btn sm" onclick="loadSharedWorkout('${w.id}')">Faire</button>
+    <button class="iconbtn" onclick="ignoreShared('${w.id}')" title="Ignorer">✕</button>
+  </div>`).join("");
+}
+function loadSharedWorkout(id){
+  const w=(SHARED.incoming||[]).find(x=>x.id===id);if(!w)return;
+  document.getElementById("wName").value=w.name||"";
+  document.getElementById("exRows").innerHTML="";
+  (w.ex||[]).forEach(e=>addExRow(e.name||"",e.w||"",e.s||"",e.r||""));
+  if(!(w.ex||[]).length)addExRow();
+  renderGymExtras();
+  fs().collection("sharedWorkouts").doc(id).delete().catch(()=>{}); // consommée
+  document.querySelector("#view-gym .card").scrollIntoView({behavior:"smooth",block:"start"});
+  toast("Séance chargée — à toi de la faire 💪");
+}
+function ignoreShared(id){fs().collection("sharedWorkouts").doc(id).delete().catch(()=>{});}
 
 function saveName(){const v=(document.getElementById("socName").value||"").trim().slice(0,20);setUserName(v);renderHome();renderAmis();toast("Pseudo enregistré");}
 function copyCode(){const c=myCode();if(navigator.clipboard)navigator.clipboard.writeText(c);toast("Code copié : "+c);}
@@ -2442,6 +2538,32 @@ function toggleChallengeDay(id){
   p[cloud.uid]=mine;
   fs().collection("challenges").doc(id).set({progress:p},{merge:true}).catch(()=>{});
 }
+function markChallengeDone(id){
+  const c=[...CH.incoming,...CH.outgoing].find(x=>x.id===id);if(!c)return;
+  const p=Object.assign({},c.progress||{});const mine=(p[cloud.uid]||[]).slice();
+  const tk=todayKey();if(mine.indexOf(tk)<0)mine.push(tk);
+  p[cloud.uid]=mine;
+  fs().collection("challenges").doc(id).set({progress:p},{merge:true}).catch(()=>{});
+}
+/* ---- Vérification IA d'un défi par photo ---- */
+let proofChId=null;
+function pickBetProof(id){
+  if(!geminiKey()){toast("Ajoute ta clé Gemini dans Réglages ⚙️");go("settings");return;}
+  proofChId=id;document.getElementById("betProofInput").click();
+}
+function onBetProof(ev){const f=ev.target.files[0];ev.target.value="";if(f&&proofChId)verifyBetProof(proofChId,f);}
+function verifyBetProof(id,file){
+  const c=[...CH.incoming,...CH.outgoing].find(x=>x.id===id);if(!c)return;
+  toast("Vérification par l'IA… 🤖");
+  const prompt="Un défi/pari s'intitule : « "+c.title+" ». Voici une photo censée prouver que la personne l'a respecté AUJOURD'HUI. "+
+    "Regarde l'image et juge honnêtement si elle prouve de façon crédible que ce défi a été respecté. "+
+    "Réponds STRICTEMENT en JSON : {\"ok\":true_ou_false,\"raison\":\"courte explication en français\"}.";
+  resizeImg(file,1200).then(b64=>geminiCall([{text:prompt},{inline_data:{mime_type:"image/jpeg",data:b64}}],true)).then(t=>{
+    let d;try{d=JSON.parse(t);}catch(e){throw new Error("Réponse illisible");}
+    if(d.ok===true||d.ok==="true"){markChallengeDone(id);toast("✅ Validé par l'IA : "+(d.raison||"défi respecté").slice(0,60));}
+    else{toast("❌ Refusé : "+((d.raison||"l'image ne prouve pas le défi")).slice(0,70));}
+  }).catch(e=>{console.error(e);let m=(e&&e.message)||"";if(/not found|404/i.test(m))m="Modèle IA indisponible";else if(/API key|PERMISSION|403/i.test(m))m="Clé refusée";toast("Échec : "+m.slice(0,50));});
+}
 function challengeFinished(c){return !!c.start&&daysBetween(c.start,todayKey())>=c.days;}
 function challengeOutcome(c){
   const me=cloud.uid;const other=c.from===me?c.to:c.from;
@@ -2479,7 +2601,10 @@ function challengeCard(c){
     const txt=out==="win"?(c.stake?`🏆 Gagné · +${fmtBillets(c.stake)} 💵`:"🏆 Tu as gagné !"):out==="lose"?(c.stake?`💸 Perdu · −${fmtBillets(c.stake)} 💵`:"😔 Perdu de peu"):"🤝 Égalité"+(c.stake?" — mise rendue":"");
     footer=`<div class="ch-result ${out}">${txt}</div>`;
   }else{
-    footer=`<button class="btn ${doneToday?'subtle':''} full sm" style="margin-top:10px" onclick="toggleChallengeDay('${c.id}')">${doneToday?"✓ Fait aujourd'hui":"Marquer fait aujourd'hui"}</button>`;
+    footer=`<div class="row" style="margin-top:10px">
+      <button class="btn ${doneToday?'subtle':''} sm" style="flex:1" onclick="toggleChallengeDay('${c.id}')">${doneToday?"✓ Fait aujourd'hui":"Marquer fait"}</button>
+      ${doneToday?'':`<button class="btn ghost sm" style="flex:none" onclick="pickBetProof('${c.id}')">📷 Prouver (IA)</button>`}
+    </div>`;
   }
   const delBtn=finished?"":`<button class="iconbtn" onclick="deleteChallenge('${c.id}')" title="${c.stake?'Annuler le pari (24h max)':'Supprimer le défi'}">✕</button>`;
   return `<div class="card">
